@@ -1,0 +1,84 @@
+html {
+    font-size: 14px;
+}
+
+html, 
+body,
+.main {    
+    width: 100%;
+    height: 100%;
+    position: relative;
+    margin: 0rem;
+}
+
+.background-text {
+    width: 10rem;
+    height: 3rem;
+    position: fixed;
+    top: 30%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: royalblue;
+    color: white;
+    text-align: center;
+    padding-top: 1rem;
+    font-size: 1.2rem;
+}
+
+.modal:before {
+    content:"";
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    background-color: rgba(0,0,0,0.7); 
+}
+
+.modal .modal-window {
+    width: 25rem;
+    height: 15rem;
+    position: fixed;
+    top:calc(30% + 3rem);
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    background-color: white;
+    margin-left: 1rem;
+    margin-right: 1rem;
+    padding: 1rem 0rem;
+}
+
+.close {
+    position: absolute;
+    top: .1rem;
+    right: .3rem;
+    color: #aaaaaa;
+    float: right;
+    font-size: 1.5rem;
+}
+.title, 
+.hi {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    padding-bottom: 1rem;
+}
+
+.title {
+    font-size: 1.5rem;
+    border-bottom: 1px solid lightgray;
+}
+
+.button {
+    width: 3rem;
+    height: 1.8rem;
+    position: absolute;
+    bottom: 1rem;
+    right: 1.5rem;
+    background-color: royalblue;
+    color: white;
+    border: none;
+    font-size: 1rem;
+}
