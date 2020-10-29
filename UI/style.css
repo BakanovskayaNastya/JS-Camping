@@ -1,11 +1,27 @@
 :root {
     --primary-font-colour: rgba(2, 94, 115, 0.75);
     --secondary-logo-colour: rgba(245, 248, 253, 1);
+    --border-colour: rgba(198, 197, 217, 1);
+    --main-background-colour: rgba(198, 197, 217, 0.5);
+    --search-input-colour: rgba(198, 197, 217, 0.5); 
+    --search-button-colour: rgba(130, 195, 209, 0.75);
+    --checkmark-colour: rgba(198, 197, 217, 1);
+    --scrollbar-colour: rgba(198, 197, 217, 0.5);
+    --chat-area-background-colour: rgba(245, 248, 253, 1);
+    --load-more-messages-button: rgba(198, 197, 217, 0.7);
+    --message-text-colour:  rgba(13, 13, 13, 0.8);
+    --them-message-background-colour: rgba(198, 197, 217, 0.5);
+    --us-message-background-colour: rgba(130, 195, 209, 0.75);
+    --users-choice-input-colour: rgba(130, 195, 209, 0.75);
+    --input-message-colour: rgba(198, 197, 217, 0.3);
+    --send-message-button-colour: rgba(198, 197, 217, 0);
     --header-height: 7rem;
     --footer-height: 5rem;
     --function-body-width: 28rem;
     --right-border-width: 3rem;
     --left-border-width: 5rem;
+    --input-message-area-height: 4rem;
+
 }
 
 html {
@@ -17,6 +33,7 @@ body {
     width: 100%;
     height: 100%;
     margin: 0;
+    padding: 0;
 }
 
 body {
@@ -28,6 +45,13 @@ ul {
     list-style-type: none;
 }
 
+.header,
+.footer, 
+.left-border, 
+.right-border {
+    background-color: var(--border-colour);
+}
+
 .primary-font-colour {
     color: var(--primary-font-colour);
 }
@@ -35,9 +59,9 @@ ul {
 .header {
     width: 100%;
     height: var(--header-height);
-    background-color: rgba(198, 197, 217, 1);
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .logo {
@@ -46,21 +70,19 @@ ul {
     margin-left: 1rem;
 }
 
-.logout-button {
-    width: 2.5rem;
-    height: auto;
-}
-
-
 .user-status {
-    float: right;
     margin-left: auto;
     margin-right: 3rem;
     display: flex;
     align-items: center;
 }
 
-#user-name {
+.logout-button {
+    width: 2.5rem;
+    height: auto;
+}
+
+.user-name {
     font-weight: bold;
     font-size: 1.3rem;
     margin-right: 0.5rem;
@@ -69,21 +91,20 @@ ul {
 .main {
     width: 100%;
     height: calc(100% - var(--footer-height) - var(--header-height));
-    background-color: rgba(198, 197, 217, 0.5);
+    background-color: var(--main-background-colour);
     display: flex;
     flex-direction: row;
 }
 
-.choose-function {
-    background-color: rgba(198, 197, 217, 1);
+.left-border {
     width: var(--left-border-width);
 }
 
-.choose-function>ul {
+.left-border>ul {
     padding-inline-start: 0rem;
 }
 
-.choose-function>ul>li {
+.left-border>ul>li {
     padding-top: 2rem;
 }
 
@@ -93,6 +114,7 @@ ul {
 
 .function-body {
     width: 28rem;
+    overflow-y: auto;
 }
 
 .users-online {
@@ -138,7 +160,7 @@ ul {
     left: 0.5rem;
     height: 1rem;
     width: 1rem;
-    background-color: rgba(198, 197, 217, 1);
+    background-color: var(--checkmark-colour);
     border: 1px solid var(--primary-font-colour);
 }
 
@@ -165,7 +187,7 @@ ul {
 .search-input input[type=text] {
     width: 20rem;
     height: 2rem;
-    background-color: rgba(198, 197, 217, 0.5);
+    background-color: var(--search-input-colour);
     border-radius: 1.5rem;
     border: none;
     color: var(--primary-font-colour);
@@ -197,8 +219,8 @@ ul {
     height: 2rem;
     margin-top:1rem;
     border: none;
-    border-radius: 01rem;
-    background-color:  rgba(130, 195, 209, 0.75);
+    border-radius: 1rem;
+    background-color: var(--search-button-colour);
     color: var(--primary-font-colour);
     left: 50%;
     transform: translateX(50%);
@@ -207,9 +229,10 @@ ul {
 .chat-area {
     width: calc(100% - var(--right-border-width) - var(--function-body-width) - var(--left-border-width));
     height: 100%;
-    background-color: rgba(245, 248, 253, 1);
+    background-color:var(--chat-area-background-colour);
     display: flex;
     flex-direction: column;
+    justify-content: space-between;
     position: relative;
 }
 
@@ -224,7 +247,7 @@ ul {
     width: 8rem;
     height: 1.5rem;
     align-self: center;
-    background-color: rgba(198, 197, 217, 0.7);
+    background-color: var(--load-more-messages-button);
     border-radius: 0.5rem;
     border: none;
     position: fixed;
@@ -233,29 +256,24 @@ ul {
     text-decoration: underline;
 }
 
-.message-area::-webkit-scrollbar {
+::-webkit-scrollbar {
     width: 0.5rem;
 }
 
-.message-area::-webkit-scrollbar-thumb {
-    background:  rgba(198, 197, 217, 0.5);
+::-webkit-scrollbar-thumb {
+    background:  var(--scrollbar-colour);
     border-radius: 1rem;
 }
 
 .message {
     margin-top: 1.5rem;
     max-width: 50%;
-    color: rgba(13, 13, 13, 0.8);
+    color: var(--message-text-colour);
     z-index: 1;
 }
 
 .them-message-colour {
-    background-color: rgba(198, 197, 217, 0.5);
-}
-
-.us-message {
-    align-self: flex-end;
-    padding-right: 2rem;
+    background-color: var(--them-message-background-colour);
 }
 
 .them-message {
@@ -263,17 +281,22 @@ ul {
 }
 
 .us-message-colour {
-    background-color: rgba(130, 195, 209, 0.75);
+    background-color: var(--us-message-background-colour);
+}
+
+.us-message {
+    align-self: flex-end;
+    padding-right: 2rem;
 }
 
 .author {
-    color:  rgba(13, 13, 13, 0.8);
+    color: var(--message-text-colour);
     font-weight: bold;
     padding-left: 2rem;
 }
 
 .target {
-    color:  rgba(13, 13, 13, 0.8);
+    color: var(--message-text-colour);
     font-weight: bold;
 }
 
@@ -298,7 +321,7 @@ ul {
 .target-users-choice input[type=text] {
     width: 10rem;
     height: 1.5rem;
-    background-color: rgba(130, 195, 209, 0.75);
+    background-color: var(--users-choice-input-colour);
     border-radius: 0.5rem;
     border: none;
     color: var(--primary-font-colour);
@@ -313,10 +336,10 @@ ul {
 
 .input-message {
     width: 100%;
-    height: 4rem;
+    height: var(--input-message-area-height);
     border-radius: 0.8rem;
-    border-color: rgba(198, 197, 217, 0.3);
-    background-color: rgba(198, 197, 217, 0.3);
+    border-color: var(--input-message-colour);
+    background-color: var(--input-message-colour);
 }
 
 .input-message textarea {
@@ -335,11 +358,11 @@ ul {
 
 .input-message input[type="submit"] {
     width: 4rem;
-    height: 4rem;
+    height: var(--input-message-area-height);
     margin: 0;
     padding: 0;
     border: none;
-    background-color: rgba(198, 197, 217, 0);;
+    background-color: var(--send-message-button-colour);
     background-image: url("images/send-message.png");
     background-position: center center;
     background-size: 2rem 2rem;
@@ -366,15 +389,14 @@ label:focus
 
 .right-border {
     width: var(--right-border-width);
-    background-color: rgba(198, 197, 217, 1);
 }
 
 .footer {
     width: 100%;
     height: var(--footer-height);
-    background-color: rgba(198, 197, 217, 1);
     display: flex;
     align-items: center;
+    justify-content: space-between;
 }
 
 .logo-text {
@@ -384,32 +406,31 @@ label:focus
 }
 
 .about-us {
-    float: right;
     margin-left: auto;
     margin-right: 2rem;
 }
 
+.about-us>ul {
+    margin: 0 1rem;
+}
 .secondary-logo-colour {
     color: var(--secondary-logo-colour);
 }
 
-.deep-green-colour {
-    color: rgba(2, 94, 115, 0.75);
-}
+@media all and (max-width: 600px) {
+    :root {
+        --header-height: 3rem;
+        --footer-height: 2rem;
+        --function-body-width: 10rem;
+        --right-border-width: 1rem;
+        --left-border-width: 3rem;
+    }
 
-.cyan-colour {
-    color: rgba(130, 195, 209, 0.75);
-}
+    .function-body {
+        display: none;
+    }
 
-.white-colour {
-    color: rgba(245, 248, 253, 1);
+    .chat-area {
+        width: calc(100% - var(--right-border-width) - var(--left-border-width));
+    }
 }
-
-.grey-colour {
-    color: rgba(198, 197, 217, 0.50);
-}
-
-.black-colour {
-    color: rgba(13, 13, 13, 0.80);
-}
-
