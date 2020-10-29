@@ -416,21 +416,3 @@ label:focus
 .secondary-logo-colour {
     color: var(--secondary-logo-colour);
 }
-
-@media all and (max-width: 600px) {
-    :root {
-        --header-height: 3rem;
-        --footer-height: 2rem;
-        --function-body-width: 10rem;
-        --right-border-width: 1rem;
-        --left-border-width: 3rem;
-    }
-
-    .function-body {
-        display: none;
-    }
-
-    .chat-area {
-        width: calc(100% - var(--right-border-width) - var(--left-border-width));
-    }
-}
