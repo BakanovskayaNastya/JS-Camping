@@ -1,4 +1,5 @@
-const messages = [
+const functions = (function(){
+    const messages = [
     {
         id: '1',
         text: 'Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне.',
@@ -144,41 +145,31 @@ const messages = [
         isPersonal: true,
         to: 'Дарт Вейдер'
     }
-];
+    ];
 
-const functions = (function(){
+    let currentUser = 'Дарт Вейдер';
+
+    const filterObj = {
+        author: (item, author) => !author || item.author.toLowerCase().includes(author.toLowerCase()),
+        text: (item, text) => !text || item.text.toLowerCase().includes(text.toLowerCase()),
+        dateFrom: (item, dateFrom) => !dateFrom || item.createdAt > dateFrom,
+        dateTo: (item, dateTo) => !dateTo || item.createdAt < dateTo
+    };
+
+    const validObj = {
+    	text: (item) => item.text && item.text.length <= 200
+    };
 
     function getMessages(skip = 0, top = 10, filterConfig) {
-        messages.sort( (a, b) => {
-            return a.createdAt - b.createdAt;
-        });
         let result = messages.slice();
         if (filterConfig) {
-            if (filterConfig.author) {
-                for (let i = 0; i < result.length; i++) {
-                    if (!result[i].author.includes(filterConfig.author)) {
-                        result.splice(i, 1);
-                        i--;
-                    }
-                }
-            }
-            if (filterConfig.text) {
-                for (let i = 0; i < result.length; i++) {
-                    if (!result[i].text.includes(filterConfig.text)) {
-                        result.splice(i, 1);
-                        i--;
-                    }
-                }
-            }
-            if (filterConfig.dateFrom && filterConfig.dateTo) {
-                for (let i = 0; i < result.length; i++) {
-                    if (!((result[i].createdAt - filterConfig.dateFrom) > 0 && ((filterConfig.dateTo - result[i].createdAt) > 0))) {
-                        result.splice(i, 1);
-                        i--;
-                    }
-                }
-            }
-        }
+            Object.keys(filterConfig).forEach((key) => {
+                result = result.filter((item) => filterObj[key](item, filterConfig[key]));
+            });
+        } 
+        result.sort( (a, b) => {
+            return a.createdAt - b.createdAt;
+        });
         return result.splice(skip, top);
     }
     
@@ -191,31 +182,15 @@ const functions = (function(){
     }
 
     function validateMessage(msg) {
-        if (msg.id && typeof(msg.id) !== "string") {
-            return false;
-        }
-        if (msg.text && typeof(msg.text) !== "string") {
-            return false;
-        }
-        if (msg.author && typeof(msg.author) !== "string") {
-            return false;
-        } 
-        if (msg.createdAt && Object.prototype.toString.call(msg.createdAt) !== '[object Date]') {
-            return false;
-        }
-        if (msg.isPersonal && typeof(msg.isPersonal) !== "boolean") {
-            return false;
-        }
-        if (msg.to) {
-            if(msg.isPersonal === true && typeof(msg.to) !== "string") {
-                return false;
-            }
-        }
-        return true;
+    	return Object.keys(validObj).every((key) => validObj[key](msg));
     }
 
     function addMessage(msg) {
         if(validateMessage(msg)){
+        	msg.id = '${new Date()}';
+        	msg.createdAt = new Date()
+        	msg.author = currentUser;
+
             messages.push(msg);
             return true;
         }
@@ -223,19 +198,19 @@ const functions = (function(){
     }
 
     function editMessage(id, message) {
-        if(validateMessage(message)){
-            let index = messages.findIndex(item => item.id === id);
-            if (index !== -1) {
-                if (message.text) {
-                    messages[index].text = message.text;
-                }
-                if (message.isPersonal) {
-                    messages[index].isPersonal = message.isPersonal;
-                }
-                if (message.to && message.isPersonal) {
-                    messages[index].to = message.to;
-                }
+        let index = messages.findIndex(item => item.id === id);
+        if (index !== -1) {
+            if (message.text) {
+                messages[index].text = message.text;
             }
+            if (message.isPersonal) {
+                messages[index].isPersonal = message.isPersonal;
+            }
+            if (message.to && message.isPersonal) {
+                messages[index].to = message.to;
+            }
+        }
+        if(validateMessage(message)) {
             return true;
         }
         return false;
@@ -266,11 +241,13 @@ console.log("Messages of users with 'Лиза' substr in author", functions.getM
 console.log("Messages of users with 'Дарт' substr in author: ", functions.getMessages(0, 10, {author: 'Дарт'}));
 console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsum' in text: ", functions.getMessages(0, 10, {author: 'Дарт', text: 'Lorem Ipsum'}));
 console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsum' in text: ", functions.getMessages(0, 10, {
+	author: 'Дарт',
     text: 'Lorem Ipsum',
-    dateFrom: new Date('2020-10-11T18:15:17'),
-    dateTo: new Date(),
-    author: 'Дарт'
+    dateFrom: new Date('2020-10-15T18:15:17'),
+    dateTo: new Date('2020-12-11T18:15:17')
+    
 }));
+
 
 // function getMessage(id)
 console.log('');
@@ -279,27 +256,24 @@ console.log("Message with id='1'", functions.getMessage('1'));
 console.log("Message with id='6'", functions.getMessage('6'));
 console.log("There is no message with id='125'", functions.getMessage('125'));
 console.log("Message id is a number (not valid)", functions.getMessage(1));
-
 // function validateMessage(msg)
 console.log('');
 console.log('validateMessage(msg) function');
-console.log("Correct message: ", functions.validateMessage(messages[5]));
-console.log("Correct message: ", functions.validateMessage(messages[17]));
-console.log("Wrong message (id is a number):", functions.validateMessage({
-    id: 20,
+console.log("Correct message: ", functions.validateMessage({
+    id: '34',
     text: 'bla-bla',
     createdAt: new Date('2020-10-12T18:15:17'),
     author: 'Лиза',
     isPersonal: true,
     to: 'Дарт Вейдер'
 }));
-console.log("Wrong message ('to' field is a number):", functions.validateMessage({
+console.log("Correct message: ", functions.validateMessage({
     id: '20',
     text: 'Bla-bla',
     createdAt: new Date('2020-10-12T18:15:17'),
     author: 'Лиза',
     isPersonal: true,
-    to: 20
+    to: '20'
 }));
 console.log("Wrong message (text is a number):", functions.validateMessage({
     id: '1',
@@ -308,20 +282,8 @@ console.log("Wrong message (text is a number):", functions.validateMessage({
     author: 'Лиза',
     isPersonal: false
 }));
-console.log("Wrong message (wrong date):", functions.validateMessage({
-    id: '1',
-    text: '123',
-    createdAt: 'asd',
-    author: 'Лиза',
-    isPersonal: false
-}));
-console.log("Wrong message (author is a number): ", functions.validateMessage({
-    id: '1',
-    text: '123',
-    createdAt: new Date('2020-10-12T18:15:17'),
-    author: 145,
-    isPersonal: false
-}));
+
+
 
 // function addMessage(msg)
 console.log('');
@@ -336,11 +298,13 @@ console.log("Add correct message: ", functions.addMessage({
 }));
 console.log("Add wrong message: ", functions.addMessage({
     id: '1',
-    text: '123',
+    text: 123,
     createdAt: new Date('2020-10-12T18:15:17'),
-    author: 145,
+    author: '145',
     isPersonal: false
 }));
+
+
 
 // function editMessage(id, message)
 console.log('');
@@ -362,6 +326,7 @@ console.log("Edit message with invalid message (author is a number): ", function
     isPersonal: false
 }));
 
+
 //function removeMessage(id)
 console.log('');
 console.log('removeMessage(id) function');
@@ -370,9 +335,5 @@ console.log("Remove message with id='2': ", functions.removeMessage('2'));
 console.log("Remove message with id='11': ", functions.removeMessage('11'));
 console.log("Remove message with id='12: ", functions.removeMessage('12'));
 console.log("Remove message with id='12' (it was removed earlier): ", functions.removeMessage('12'));
-console.log("Remove message with id='1' (no message with such an id): ", functions.removeMessage('asd'));
+console.log("Remove message with id='125' (no message with such an id): ", functions.removeMessage('asd'));
 console.log("Remove message with id=3 (invalid id): ", functions.removeMessage(3));
-console.log("Messages without removed ones")
-messages.forEach(message => {
-    console.log(message.id);
-});
