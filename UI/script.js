@@ -1,5 +1,201 @@
-const functions = (function(){
-    const messages = [
+class Message {
+    constructor(user, msg) {
+        this._id = msg.id || `${new Date()}`;
+        this._createdAt = msg.createdAt || new Date();
+        this._author = msg.author || user;
+        this._text = msg.text;
+        this._isPersonal = msg.isPersonal;
+        if(msg.to) {
+            this._to = msg.to;
+        }
+    }
+
+    get getId() {
+        return this._id;
+    }
+
+    set setId(id) {
+        this._id = id;
+    }
+
+    get getAuthor() {
+        return this._author;
+    }
+
+    set setAuthor(author) {
+        this._author = author;
+    }
+
+    get getCreatedAt() {
+        return this._createdAt;
+    }
+
+    set setCreatedAt(createdAt) {
+        this._createdAt = createdAt;
+    }
+    get getText() {
+        return this._text;
+    }
+
+    set setText(text) {
+        this._text = text;
+    }
+
+    get getIsPersonal() {
+        return this._isPersonal;
+    }
+
+    set setIsPersonal(isPersonal) {
+        this._getIsPersonal = isPersonal;
+    }
+    
+    get getTo() {
+        return this._to;
+    }
+
+    set setTo(to) {
+        this._to = to;
+    }
+}
+
+class MessageList {
+    constructor(msgs) {
+        this._messages = [];
+        msgs.forEach(item => {
+            this._messages.push(new Message(this._user, item));
+        });
+    }
+
+    _user = 'Дарт Вейдер';
+
+    get getUser() {
+        return this._user;
+    }
+
+    set setUser(user) {
+        this._user = user;
+    }
+
+    get getMessages() {
+        return this._messages;
+    }
+
+    set setMessages(msgs) {
+        this._messages = msgs;
+    }
+
+    _filterObj = {
+        author: (item, author) => !author || item.getAuthor.toLowerCase().includes(author.toLowerCase()),
+        text: (item, text) => !text || item.getText.toLowerCase().includes(text.toLowerCase()),
+        dateFrom: (item, dateFrom) => !dateFrom || item.getCreatedAt > dateFrom,
+        dateTo: (item, dateTo) => !dateTo || item.getCreatedAt < dateTo
+    }
+
+    static _validObj = {
+    	text: (item) => item.getText && item.getText.length <= 200
+    }
+
+    //getMessages
+    getPage(skip = 0, top = 10, filterConfig) {
+        let result = this._messages.slice();
+
+        result = result.filter(item => {
+            if(item.getAuthor === this._user || item.getIsPersonal === false || (item.getIsPersonal === true && item.getTo === this._user)) {
+                return true;
+            }
+            return false;
+        })
+        
+        if (filterConfig) {
+            Object.keys(filterConfig).forEach((key) => {
+                result = result.filter((item) => this._filterObj[key](item, filterConfig[key]));
+            });
+        } 
+        result.sort( (a, b) => {
+            return a.getCreatedAt - b.getCreatedAt;
+        });
+        return result.splice(skip, top);
+    }
+
+    //getMessage
+    get(id) {
+        let message = this._messages.find(item => item.getId === id);
+        if (message && message.getAuthor === this._user) {
+            return message;
+        }
+        return null;
+    }
+
+    //addMessage
+    add(msg) {
+        let message = new Message(this._user, msg);
+        if(MessageList.validate(message)){
+            this._messages.push(message);
+            return true;
+        }
+        return false;
+    }
+
+    //editMessage
+    edit(id, msg) {
+        let index = this._messages.findIndex(item => item.getId === id);
+        if (index !== -1 && this._messages[index].getAuthor === this._user) {
+            if (msg.text) {
+                this._messages[index].setText = msg.text;
+            }
+            if (msg.isPersonal) {
+                this._messages[index].setIsPersonal = msg.isPersonal;
+            }
+            if (msg.to && msg.isPersonal) {
+                this._messages[index].setTo = msg.to;
+            }
+            if(MessageList.validate(this._messages[index])) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    //removeMessage
+    remove(id) {
+        let index = this._messages.findIndex(item => item.getId === id);
+        if (index !== -1 && this._messages[index].getAuthor === this._user) {
+            let messageDeleted = this._messages.splice(index, 1);
+            if (messageDeleted.length === 1) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //validateMessage
+    static validate(msg) {
+        return Object.keys(this._validObj).every((key) => this._validObj[key](msg));
+    }
+
+    //add all messages from the array to collection
+    addAll(msgs) {
+        let notValidMessages = [];
+        msgs.forEach(item => {
+            if(MessageList.validate(item)) {
+                this._messages.push(item);
+            }
+            else {
+                notValidMessages.push(item);
+            }
+        });
+        return notValidMessages;
+    }
+
+    //delete all messages
+    clear() {
+        this._messages = [];
+    }
+
+}
+
+const messages = [
     {
         id: '1',
         text: 'Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне.',
@@ -147,100 +343,19 @@ const functions = (function(){
     }
     ];
 
-    let currentUser = 'Дарт Вейдер';
+let chat = new MessageList(messages);
 
-    const filterObj = {
-        author: (item, author) => !author || item.author.toLowerCase().includes(author.toLowerCase()),
-        text: (item, text) => !text || item.text.toLowerCase().includes(text.toLowerCase()),
-        dateFrom: (item, dateFrom) => !dateFrom || item.createdAt > dateFrom,
-        dateTo: (item, dateTo) => !dateTo || item.createdAt < dateTo
-    };
-
-    const validObj = {
-    	text: (item) => item.text && item.text.length <= 200
-    };
-
-    function getMessages(skip = 0, top = 10, filterConfig) {
-        let result = messages.slice();
-        if (filterConfig) {
-            Object.keys(filterConfig).forEach((key) => {
-                result = result.filter((item) => filterObj[key](item, filterConfig[key]));
-            });
-        } 
-        result.sort( (a, b) => {
-            return a.createdAt - b.createdAt;
-        });
-        return result.splice(skip, top);
-    }
-    
-    function getMessage(id) {
-        let message = messages.find(item => item.id === id);
-        if (message) {
-            return message;
-        }
-        return null;
-    }
-
-    function validateMessage(msg) {
-    	return Object.keys(validObj).every((key) => validObj[key](msg));
-    }
-
-    function addMessage(msg) {
-        if(validateMessage(msg)){
-        	msg.id = '${new Date()}';
-        	msg.createdAt = new Date()
-        	msg.author = currentUser;
-
-            messages.push(msg);
-            return true;
-        }
-        return false;
-    }
-
-    function editMessage(id, message) {
-        let index = messages.findIndex(item => item.id === id);
-        if (index !== -1) {
-            if (message.text) {
-                messages[index].text = message.text;
-            }
-            if (message.isPersonal) {
-                messages[index].isPersonal = message.isPersonal;
-            }
-            if (message.to && message.isPersonal) {
-                messages[index].to = message.to;
-            }
-        }
-        if(validateMessage(message)) {
-            return true;
-        }
-        return false;
-    }
-
-    function removeMessage(id) {
-        let index = messages.findIndex(message => message.id === id);
-        if (index !== -1) {
-            let messageDeleted = messages.splice(index, 1);
-            if (messageDeleted.length === 1) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    return {getMessages, getMessage, validateMessage, addMessage, editMessage, removeMessage};
-})();
-
-
+let user = 'Дарт Вейдер';
 // checking for the correct work of module
 
 // function getMessages(skip = 0, top = 10, filterConfig)
 console.log('getMessages(skip = 0, top = 10, filterConfig) function');
-console.log('First 10 messages ', functions.getMessages(0, 10));
-console.log('Second 10 messages ', functions.getMessages(10, 10));
-console.log("Messages of users with 'Лиза' substr in author", functions.getMessages(0, 10, {author: 'Лиза'}));
-console.log("Messages of users with 'Дарт' substr in author: ", functions.getMessages(0, 10, {author: 'Дарт'}));
-console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsum' in text: ", functions.getMessages(0, 10, {author: 'Дарт', text: 'Lorem Ipsum'}));
-console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsum' in text: ", functions.getMessages(0, 10, {
+console.log('First 10 messages ', chat.getPage(0, 10));
+console.log('Second 10 messages ', chat.getPage(10, 10));
+console.log("Messages of users with 'Лиза' substr in author", chat.getPage(0, 10, {author: 'Лиза'}));
+console.log("Messages of users with 'Дарт' substr in author: ", chat.getPage(0, 10, {author: 'Дарт'}));
+console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsum' in text: ", chat.getPage(0, 10, {author: 'Дарт', text: 'Lorem Ipsum'}));
+console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsum' in text: ", chat.getPage(0, 10, {
 	author: 'Дарт',
     text: 'Lorem Ipsum',
     dateFrom: new Date('2020-10-15T18:15:17'),
@@ -248,92 +363,95 @@ console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsu
     
 }));
 
-
 // function getMessage(id)
 console.log('');
 console.log('getMessage(id) function');
-console.log("Message with id='1'", functions.getMessage('1'));
-console.log("Message with id='6'", functions.getMessage('6'));
-console.log("There is no message with id='125'", functions.getMessage('125'));
-console.log("Message id is a number (not valid)", functions.getMessage(1));
+console.log("Message with id='1' (author !== user)", chat.get('1'));
+console.log("Message with id='6'", chat.get('6'));
+console.log("There is no message with id='125'", chat.get('125'));
+console.log("Message id is a number (not valid)", chat.get(1));
+
 // function validateMessage(msg)
 console.log('');
 console.log('validateMessage(msg) function');
-console.log("Correct message: ", functions.validateMessage({
+console.log("Wrong message (text length is more than 250): ", MessageList.validate(
+    new Message(user, {
     id: '34',
-    text: 'bla-bla',
+    text: 'Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов.',
     createdAt: new Date('2020-10-12T18:15:17'),
     author: 'Лиза',
     isPersonal: true,
     to: 'Дарт Вейдер'
-}));
-console.log("Correct message: ", functions.validateMessage({
+})));
+console.log("Correct message: ", MessageList.validate(
+    new Message(user, {
     id: '20',
     text: 'Bla-bla',
     createdAt: new Date('2020-10-12T18:15:17'),
     author: 'Лиза',
     isPersonal: true,
     to: '20'
-}));
-console.log("Wrong message (text is a number):", functions.validateMessage({
+})));
+console.log("Wrong message (text is a number):", MessageList.validate(
+    new Message(user, {
     id: '1',
     text: 123,
     createdAt: new Date('2020-10-12T18:15:17'),
     author: 'Лиза',
     isPersonal: false
-}));
-
-
+})));
 
 // function addMessage(msg)
 console.log('');
 console.log('addMessage(msg) function');
-console.log("Add correct message: ", functions.addMessage({
-    id: '28',
+console.log("Add correct message: ", chat.add({
     text: 'Всем привет.',
-    createdAt: new Date('2020-10-12T18:15:17'),
-    author: 'Лиза',
     isPersonal: true,
     to: 'Дарт Вейдер'
 }));
-console.log("Add wrong message: ", functions.addMessage({
-    id: '1',
+console.log("Add wrong message: ", chat.add({
     text: 123,
-    createdAt: new Date('2020-10-12T18:15:17'),
-    author: '145',
     isPersonal: false
 }));
-
-
 
 // function editMessage(id, message)
 console.log('');
 console.log('editMessage(id, message) function');
-console.log("Edit message with incomplete message object (there is only text field in it): ",functions.editMessage('1', { text: 'hi' }));
-console.log("Edit message with valid message: ", functions.editMessage("18", {
-    id: '28',
+console.log("Edit message with incomplete message object, author = user (return true): ", chat.edit('6', { text: 'hi' }));
+console.log("Edit message with valid message, but author != user (return false): ", chat.edit("18", {
     text: 'Всем привет.',
-    createdAt: new Date('2020-10-12T18:15:17'),
-    author: 'Лиза',
     isPersonal: true,
     to: 'Дарт Вейдер'
 }));
-console.log("Edit message with invalid message (author is a number): ", functions.editMessage("5", {
+console.log("Edit message with invalid message (text is a number) (return false): ", chat.edit("5", {
     id: '1',
-    text: '123',
-    createdAt: new Date('2020-10-12T18:15:17'),
-    author: 145,
+    text: 123,
     isPersonal: false
 }));
-
 
 //function removeMessage(id)
 console.log('');
 console.log('removeMessage(id) function');
-console.log("Remove message with id='1': ", functions.removeMessage('1'));
-console.log("Remove message with id='2': ", functions.removeMessage('2'));
-console.log("Remove message with id='11': ", functions.removeMessage('11'));
-console.log("Remove message with id='12: ", functions.removeMessage('12'));
-console.log("Remove message with id='12' (it was removed earlier): ", functions.removeMessage('12'));
-console.log("Remove message with id='125' (no message with such an id): ", functions.removeMessage('asd'));
-console.log("Remove message with id=3 (invalid id): ", functions.removeMessage(3));
+console.log("Remove message with id='2' (user !== author): ", chat.remove('2'));
+console.log("Remove message with id='7: ", chat.remove('7'));
+console.log("Remove message with id='7' (it was removed earlier): ", chat.remove('12'));
+console.log("Remove message with id='125' (no message with such an id): ", chat.remove('asd'));
+console.log("Remove message with id=3 (invalid id): ", chat.remove(3));
+
+chat.addAll([new Message('bla-bla', {
+    text: 'Всем привет.',
+    isPersonal: false
+}),
+new Message('bla-bla', {
+    text: 'Всем привет.',
+    isPersonal: false
+}),
+new Message('bla-bla', {
+    text: 'Всем привет.',
+    isPersonal: false
+})]);
+
+console.log(chat.getPage(0, 100));
+
+chat.clear();
+console.log(chat.getPage(0, 100));
