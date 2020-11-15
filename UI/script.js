@@ -10,50 +10,39 @@ class Message {
         }
     }
 
-    get getId() {
+    get id() {
         return this._id;
     }
 
-    set setId(id) {
-        this._id = id;
-    }
-
-    get getAuthor() {
+    get author() {
         return this._author;
     }
 
-    set setAuthor(author) {
-        this._author = author;
-    }
-
-    get getCreatedAt() {
+    get createdAt() {
         return this._createdAt;
     }
 
-    set setCreatedAt(createdAt) {
-        this._createdAt = createdAt;
-    }
-    get getText() {
+    get text() {
         return this._text;
     }
 
-    set setText(text) {
+    set text(text) {
         this._text = text;
     }
 
-    get getIsPersonal() {
+    get isPersonal() {
         return this._isPersonal;
     }
 
-    set setIsPersonal(isPersonal) {
-        this._getIsPersonal = isPersonal;
+    set isPersonal(isPersonal) {
+        this._isPersonal = isPersonal;
     }
     
-    get getTo() {
+    get to() {
         return this._to;
     }
 
-    set setTo(to) {
+    set to(to) {
         this._to = to;
     }
 }
@@ -68,39 +57,35 @@ class MessageList {
 
     _user = 'Дарт Вейдер';
 
-    get getUser() {
+    get user() {
         return this._user;
     }
 
-    set setUser(user) {
+    set user(user) {
         this._user = user;
     }
 
-    get getMessages() {
+    get messages() {
         return this._messages;
     }
 
-    set setMessages(msgs) {
-        this._messages = msgs;
-    }
-
     _filterObj = {
-        author: (item, author) => !author || item.getAuthor.toLowerCase().includes(author.toLowerCase()),
-        text: (item, text) => !text || item.getText.toLowerCase().includes(text.toLowerCase()),
-        dateFrom: (item, dateFrom) => !dateFrom || item.getCreatedAt > dateFrom,
-        dateTo: (item, dateTo) => !dateTo || item.getCreatedAt < dateTo
+        author: (item, author) => !author || item.author.toLowerCase().includes(author.toLowerCase()),
+        text: (item, text) => !text || item.text.toLowerCase().includes(text.toLowerCase()),
+        dateFrom: (item, dateFrom) => !dateFrom || item.createdAt > dateFrom,
+        dateTo: (item, dateTo) => !dateTo || item.createdAt < dateTo
     }
 
     static _validObj = {
-    	text: (item) => item.getText && item.getText.length <= 200
+    	text: (item) => item.text && item.text.length <= 200
     }
 
-    //getMessages
+    //messages
     getPage(skip = 0, top = 10, filterConfig) {
         let result = this._messages.slice();
 
         result = result.filter(item => {
-            if(item.getAuthor === this._user || item.getIsPersonal === false || (item.getIsPersonal === true && item.getTo === this._user)) {
+            if(item.author === this._user || item.isPersonal === false || (item.isPersonal === true && item.to === this._user)) {
                 return true;
             }
             return false;
@@ -112,15 +97,15 @@ class MessageList {
             });
         } 
         result.sort( (a, b) => {
-            return a.getCreatedAt - b.getCreatedAt;
+            return a.createdAt - b.createdAt;
         });
-        return result.splice(skip, top);
+        return result.splice(skip, skip + top);
     }
 
     //getMessage
     get(id) {
-        let message = this._messages.find(item => item.getId === id);
-        if (message && message.getAuthor === this._user) {
+        let message = this._messages.find(item => item.id === id);
+        if (message && message.author === this._user) {
             return message;
         }
         return null;
@@ -138,18 +123,19 @@ class MessageList {
 
     //editMessage
     edit(id, msg) {
-        let index = this._messages.findIndex(item => item.getId === id);
-        if (index !== -1 && this._messages[index].getAuthor === this._user) {
-            if (msg.text) {
-                this._messages[index].setText = msg.text;
-            }
-            if (msg.isPersonal) {
-                this._messages[index].setIsPersonal = msg.isPersonal;
-            }
-            if (msg.to && msg.isPersonal) {
-                this._messages[index].setTo = msg.to;
-            }
-            if(MessageList.validate(this._messages[index])) {
+        let index = this._messages.findIndex(item => item.id === id);
+        if (index !== -1 && this._messages[index].author === this._user) {
+            let newMessage = new Message(id, msg);
+            if(MessageList.validate(newMessage)) {
+                if (msg.text) {
+                    this._messages[index].text = newMessage.text;
+                }
+                if (msg.isPersonal) {
+                    this._messages[index].isPersonal = newMessage.isPersonal;
+                }
+                if (msg.to && msg.isPersonal) {
+                    this._messages[index].to = newMessage.to;
+                }
                 return true;
             }
         }
@@ -159,12 +145,10 @@ class MessageList {
 
     //removeMessage
     remove(id) {
-        let index = this._messages.findIndex(item => item.getId === id);
-        if (index !== -1 && this._messages[index].getAuthor === this._user) {
+        let index = this._messages.findIndex(item => item.id === id);
+        if (index !== -1 && this._messages[index].author === this._user) {
             let messageDeleted = this._messages.splice(index, 1);
-            if (messageDeleted.length === 1) {
-                return true;
-            }
+            return true;
         }
         return false;
     }
@@ -348,8 +332,8 @@ let chat = new MessageList(messages);
 let user = 'Дарт Вейдер';
 // checking for the correct work of module
 
-// function getMessages(skip = 0, top = 10, filterConfig)
-console.log('getMessages(skip = 0, top = 10, filterConfig) function');
+// function messages(skip = 0, top = 10, filterConfig)
+console.log('messages(skip = 0, top = 10, filterConfig) function');
 console.log('First 10 messages ', chat.getPage(0, 10));
 console.log('Second 10 messages ', chat.getPage(10, 10));
 console.log("Messages of users with 'Лиза' substr in author", chat.getPage(0, 10, {author: 'Лиза'}));
