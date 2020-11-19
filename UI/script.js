@@ -48,14 +48,14 @@ class Message {
 }
 
 class MessageList {
+
+    _user = null;
     constructor(msgs) {
         this._messages = [];
         msgs.forEach(item => {
             this._messages.push(new Message(this._user, item));
         });
     }
-
-    _user = 'Дарт Вейдер';
 
     get user() {
         return this._user;
@@ -97,9 +97,9 @@ class MessageList {
             });
         } 
         result.sort( (a, b) => {
-            return a.createdAt - b.createdAt;
+            return b.createdAt - a.createdAt;
         });
-        return result.splice(skip, skip + top);
+        return result.splice(skip, skip + top).reverse();
     }
 
     //getMessage
@@ -179,7 +179,124 @@ class MessageList {
 
 }
 
-const messages = [
+class UserList {
+    constructor(users, activeUsers) {
+        this.users = users;
+        this.activeUsers = activeUsers;
+    }
+}
+
+class HeaderView {
+    constructor(elementId) {
+        this.elementId = elementId; 
+    }
+
+    display(user) {
+        if(user !== undefined){
+            document.getElementById(this.elementId).innerHTML = user;
+        }
+    }
+}
+
+class ActiveUsersView {
+    constructor(elementId) {
+        this.elementId = elementId; 
+    }
+
+    display(activeUsers) {
+        const activeUsersList = document.getElementById(this.elementId);
+        const innerHTML = activeUsers.map(user => 
+            `<li>${user}</li>`
+            ).join(`\n`);
+        activeUsersList.innerHTML = innerHTML;
+    }
+}
+
+class MessagesView {
+    constructor(elementId) {
+        this.elementId = elementId; 
+    }
+
+    display(msgsArray) {
+        const messagesList = document.getElementById(this.elementId);
+        messagesList.innerHTML = msgsArray.map(msg => {
+            let d = [
+                '0' + msg.createdAt.getDate(),
+                '0' + (msg.createdAt.getMonth() + 1),
+                '0' + msg.createdAt.getHours(),
+                '0' + msg.createdAt.getMinutes()
+            ].map(item => item.slice(-2));
+            let date = ' ' + d[0] + '.' + d[1] + '.' + msg.createdAt.getFullYear() + ' ' 
+                + d[2] + ':' + d[3];
+            let to = '';
+            if (msg.to) {
+                to = '  >>  ' + msg.to;
+            }
+            if (msg.author !== messageList.user) {
+                return `<div class="message them-message">
+                    <div class="message-data">
+                    <span class="author">${msg.author}</span>
+                    <span class="target">${to}</span>
+                    <span class="date">${date}</span>
+                    </div>
+                    <div class="message-text them-message-colour">${msg.text}
+                    </div>
+                </div>`
+            }
+            else {
+                return `<div class="message us-message">
+                    <div class="message-data">
+                    <span class="author">${msg.author}</span>
+                    <span class="target">${to}</span>
+                    <span class="date">${date}</span>
+                    </div>
+                    <div class="message-text us-message-colour">${msg.text}
+                    </div>
+                </div>`
+                
+            }
+        }).join(`\n`);
+    }
+
+}
+
+
+function setCurrentUser(user) {
+    messageList.user = user;
+    headerView.display(user);
+}
+
+function showActiveUsers() {
+    activeUsersView.display(userList.activeUsers);
+}
+
+function showMessages(skip, top, filterConfig) {
+    let msgsViewed = messageList.getPage(skip, top, filterConfig);
+    messagesView.display(msgsViewed);
+}
+
+function addMessage(msg) {
+    if(messageList.add(msg)){
+        showMessages(0, 10);
+    }
+
+}
+
+function editMessage(id, msg) {
+    if(messageList.edit(id, msg)){
+        showMessages(0, 10);
+    }
+}
+
+function removeMessage(id) {
+    if(messageList.remove(id)){
+        showMessages(0, 10);
+    }
+}
+
+const userList = new UserList(['Дарт Вейдер', 'Dima', 'Zhenya Zh.', 'Zhenya H.', 'Sasha', 'Pasha'], ['Dima', 'Zhenya Zh.', 'Дарт Вейдер']);
+
+const messageList = new MessageList([
     {
         id: '1',
         text: 'Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне.',
@@ -299,7 +416,7 @@ const messages = [
         id: '17',
         text: 'Есть много вариантов Lorem Ipsum, но большинство из них имеет не всегда приемлемые модификации, например, юмористические вставки или слова, которые даже отдалённо не напоминают латынь.',
         createdAt: new Date('2020-10-12T16:20:37'),
-        author: 'Настя Лещинская',
+        author: 'Дарт Вейдер',
         isPersonal: false
     },
     {
@@ -325,117 +442,25 @@ const messages = [
         isPersonal: true,
         to: 'Дарт Вейдер'
     }
-    ];
+    ]); 
 
-let chat = new MessageList(messages);
 
-let user = 'Дарт Вейдер';
-// checking for the correct work of module
+const headerView = new HeaderView('user-name');
 
-// function messages(skip = 0, top = 10, filterConfig)
-console.log('messages(skip = 0, top = 10, filterConfig) function');
-console.log('First 10 messages ', chat.getPage(0, 10));
-console.log('Second 10 messages ', chat.getPage(10, 10));
-console.log("Messages of users with 'Лиза' substr in author", chat.getPage(0, 10, {author: 'Лиза'}));
-console.log("Messages of users with 'Дарт' substr in author: ", chat.getPage(0, 10, {author: 'Дарт'}));
-console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsum' in text: ", chat.getPage(0, 10, {author: 'Дарт', text: 'Lorem Ipsum'}));
-console.log("Messages of users with 'Дарт ' substr in author and 'Lorem Ipsum' in text: ", chat.getPage(0, 10, {
-	author: 'Дарт',
-    text: 'Lorem Ipsum',
-    dateFrom: new Date('2020-10-15T18:15:17'),
-    dateTo: new Date('2020-12-11T18:15:17')
-    
-}));
+const messagesView = new MessagesView('messages');
 
-// function getMessage(id)
-console.log('');
-console.log('getMessage(id) function');
-console.log("Message with id='1' (author !== user)", chat.get('1'));
-console.log("Message with id='6'", chat.get('6'));
-console.log("There is no message with id='125'", chat.get('125'));
-console.log("Message id is a number (not valid)", chat.get(1));
+const activeUsersView = new ActiveUsersView('users-online-list');
 
-// function validateMessage(msg)
-console.log('');
-console.log('validateMessage(msg) function');
-console.log("Wrong message (text length is more than 250): ", MessageList.validate(
-    new Message(user, {
-    id: '34',
-    text: 'Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне. Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum для распечатки образцов.',
-    createdAt: new Date('2020-10-12T18:15:17'),
-    author: 'Лиза',
-    isPersonal: true,
-    to: 'Дарт Вейдер'
-})));
-console.log("Correct message: ", MessageList.validate(
-    new Message(user, {
-    id: '20',
-    text: 'Bla-bla',
-    createdAt: new Date('2020-10-12T18:15:17'),
-    author: 'Лиза',
-    isPersonal: true,
-    to: '20'
-})));
-console.log("Wrong message (text is a number):", MessageList.validate(
-    new Message(user, {
-    id: '1',
-    text: 123,
-    createdAt: new Date('2020-10-12T18:15:17'),
-    author: 'Лиза',
-    isPersonal: false
-})));
 
-// function addMessage(msg)
-console.log('');
-console.log('addMessage(msg) function');
-console.log("Add correct message: ", chat.add({
-    text: 'Всем привет.',
-    isPersonal: true,
-    to: 'Дарт Вейдер'
-}));
-console.log("Add wrong message: ", chat.add({
-    text: 123,
-    isPersonal: false
-}));
+setCurrentUser('Дарт Вейдер');
 
-// function editMessage(id, message)
-console.log('');
-console.log('editMessage(id, message) function');
-console.log("Edit message with incomplete message object, author = user (return true): ", chat.edit('6', { text: 'hi' }));
-console.log("Edit message with valid message, but author != user (return false): ", chat.edit("18", {
-    text: 'Всем привет.',
-    isPersonal: true,
-    to: 'Дарт Вейдер'
-}));
-console.log("Edit message with invalid message (text is a number) (return false): ", chat.edit("5", {
-    id: '1',
-    text: 123,
-    isPersonal: false
-}));
+showActiveUsers();
 
-//function removeMessage(id)
-console.log('');
-console.log('removeMessage(id) function');
-console.log("Remove message with id='2' (user !== author): ", chat.remove('2'));
-console.log("Remove message with id='7: ", chat.remove('7'));
-console.log("Remove message with id='7' (it was removed earlier): ", chat.remove('12'));
-console.log("Remove message with id='125' (no message with such an id): ", chat.remove('asd'));
-console.log("Remove message with id=3 (invalid id): ", chat.remove(3));
+showMessages(0, 10);
 
-chat.addAll([new Message('bla-bla', {
-    text: 'Всем привет.',
-    isPersonal: false
-}),
-new Message('bla-bla', {
-    text: 'Всем привет.',
-    isPersonal: false
-}),
-new Message('bla-bla', {
-    text: 'Всем привет.',
-    isPersonal: false
-})]);
+addMessage({text: 'Это сообщение было добавлено!!!'});
 
-console.log(chat.getPage(0, 100));
+editMessage('19', {text: 'Это сообщение было изменено!!!'});
 
-chat.clear();
-console.log(chat.getPage(0, 100));
+removeMessage('17');
+
