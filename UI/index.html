@@ -10,7 +10,7 @@
         <header class="header">
             <img src="images/logo.png" alt="logo" class="logo" />
             <div class="user-status">
-                <span class="user-name">Дарт Вейдер</span>
+                <span class="user-name" id="user-name"></span>
                 <input type="image" src="images/logout.png" alt="logout button" class="logout-button"/>
             </div>
         </header>
@@ -24,15 +24,7 @@
             </div>
             <div class="function-body">
                 <div class="users-online">
-                    <ul>
-                        <li>Лиза</li>
-                        <li>Дарт Вейдер</li>
-                        <li>Вика Смехова</li>
-                        <li>Стас Верхов</li>
-                        <li>Крокодил Гена</li>
-                        <li>Чебурашка</li>
-                        <li>Настя Лещинская</li>
-                    </ul>
+                    <ul id="users-online-list"></ul>
                 </div>
                 <div class="filters">
                     <form class="filter-search">                    
@@ -71,167 +63,8 @@
 
             <div class="chat-area">
                 <div class="message-area">
-                    <button type="button" class="load-more-messages">Загрузить еще</button>
-                    <div class="message them-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Чебурашка
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date">
-                                10.10.2020 14:35
-                            </span>
-                        </div>
-                        <div class="message-text them-message-colour">
-                            Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне. 
-                        </div>
-                    </div>
-                    <div class="message them-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Крокодил Гена
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date ">
-                                10.10.2020 14:36
-                            </span>
-                        </div>
-                        <div class="message-text them-message-colour">
-                            Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum 
-                        </div>
-                    </div>
-                    <div class="message them-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Крокодил Гена
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date">
-                                10.10.2020 14:38
-                            </span>
-                        </div>
-                        <div class="message-text them-message-colour">
-                            Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн.
-                        </div>
-                    </div>
-                    <div class="message them-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Лиза
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date">
-                                10.10.2020 14:40
-                            </span>
-                        </div>
-                        <div class="message-text them-message-colour">
-                            Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах
-                        </div>
-                    </div>
-                    <div class="message them-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Стас Верхов
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date">
-                                10.10.2020 14:50
-                            </span>
-                        </div>
-                        <div class="message-text them-message-colour">
-                            в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum.
-                        </div>
-                    </div>
-                    <div class="message us-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Дарт Вейдер
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date">
-                                10.10.2020 14:55
-                            </span>
-                        </div>
-                        <div class="message-text us-message-colour">
-                            Давно выяснено, что при оценке дизайна и композиции читаемый текст мешает сосредоточиться.
-                        </div>
-                    </div>
-                    <div class="message us-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Дарт Вейдер
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date">
-                                10.10.2020 14:58
-                            </span>
-                        </div>
-                        <div class="message-text us-message-colour">
-                            Lorem Ipsum используют потому, что тот обеспечивает более или менее стандартное заполнение шаблона
-                        </div>
-                    </div>
-                    <div class="message them-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Настя Лещинская
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date">
-                                10.10.2020 15:03
-                            </span>
-                        </div>
-                        <div class="message-text them-message-colour">
-                            Многие программы электронной вёрстки и редакторы HTML используют Lorem Ipsum в качестве текста по умолчанию
-                        </div>
-                    </div>
-                    <div class="message them-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Вика Смехова
-                            </span>
-                            <span class="target">
-                                >> anyone
-                            </span>
-                            <span class="date">
-                                10.10.2020 15:07
-                            </span>
-                        </div>
-                        <div class="message-text them-message-colour">
-                            За прошедшие годы текст Lorem Ipsum получил много версий.
-                        </div>
-                    </div>
-                    <div class="message us-message">
-                        <div class="message-data">
-                            <span class="author">
-                                Дарт Вейдер
-                            </span>
-                            <span class="target">
-                                >> Стас Верхов
-                            </span>
-                            <span class="date">
-                                10.10.2020 15:15
-                            </span>
-                        </div>
-                        <div class="message-text us-message-colour">
-                            Некоторые версии появились по ошибке, некоторые - намеренно (например, юмористические варианты).
-                        </div>
-                    </div>
+                    <button type="button" class="load-more-messages" id="load-more-messages">Загрузить еще</button>
+                    <div class="messages" id="messages"></div>
                 </div>
                 
                 <div class="input-message-area">
@@ -259,6 +92,6 @@
                 </ul>
             </div>
         </footer>
-
+        <script src="script.js"></script>
     </body>
 </html>
