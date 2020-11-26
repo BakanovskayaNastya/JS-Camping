@@ -9,75 +9,98 @@
     <body class="primary-font-colour">
         <header class="header">
             <img src="images/logo.png" alt="logo" class="logo" />
-            <div class="user-status">
+            <div class="user-status" id="user-status">
                 <span class="user-name" id="user-name"></span>
-                <input type="image" src="images/logout.png" alt="logout button" class="logout-button"/>
+                <input type="image" src="images/login.png" alt="logout button" class="logout-button" id="login-button"/>
             </div>
         </header>
 
         <main class="main">
-            <div class="left-border">
-                <ul>
-                    <li><input type="image" src="images/users-icon.png" alt="show users" class="function-icon" /></li>
-                    <li><input type="image" src="images/search-icon.png" alt="show filters " class="function-icon" /></li>
-                </ul>
-            </div>
-            <div class="function-body">
-                <div class="users-online">
-                    <ul id="users-online-list"></ul>
+            <div class="chat-module" id="chat-module"> 
+                <div class="left-border">
+                    <ul>
+                        <li><input type="image" src="images/users-icon.png" alt="show users" class="function-icon"  id="users-online-button" /></li>
+                        <li><input type="image" src="images/search-icon.png" alt="show filters " class="function-icon" id="filters-button" /></li>
+                    </ul>
                 </div>
-                <div class="filters">
-                    <form class="filter-search">                    
-                        <div>
-                            <label class="search-label">Поиск по имени пользователя
-                                <input type="checkbox" id="name-search" name="name-search" class="search-checkbox" />
-                                <span class="checkmark"></span>
-                            </label>
-                            <div class="search-input text-search">
-                                <input type="text" id="name-search-input" name="name-search-input" placeholder="Введите имя пользователя" class="search-input-placeholder"/>
+                <div class="function-body">
+                    <div class="users-online" id="users-online-panel">
+                        <ul id="users-online-list"></ul>
+                    </div>
+                    <div class="filters" id="filters-panel">
+                        <form class="filter-search" onsubmit="event.preventDefault(); controller.filterMessages(event);">                    
+                            <div>
+                                <label class="search-label">Поиск по имени пользователя
+                                </label>
+                                <div class="text-input text-search">
+                                    <input type="text" id="name-search-input" name="name-search-input" placeholder="Введите имя пользователя" class=" text-input-placeholder"/>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <label class="search-label">Поиск по диапазону дат
-                                <input type="checkbox" id="date-search" name="date-search" class="search-checkbox" />
-                                <span class="checkmark"></span>
-                            </label>
-                            <div class="search-input date-search">
-                                <input type="text" id="date-search-input" name="date-search-input" placeholder="DD.MM.YYYY" class="search-input-placeholder"/>
-                                <input type="text" id="date-search-input" name="date-search-input" placeholder="DD.MM.YYYY" class="search-input-placeholder"/>
+                            <div>
+                                <label class="search-label">Поиск по диапазону дат
+                                </label>
+                                <div class="text-input date-search">
+                                    <input type="text" id="date-search-start" name="date-search-start" placeholder="MM.DD.YYYY" class="text-input-placeholder"/>
+                                    <input type="text" id="date-search-end" name="date-search-end" placeholder="MM.DD.YYYY" class="text-input-placeholder"/>
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <label class="search-label">Поиск по тексту сообщения
-                                <input type="checkbox" id="message-search" name="message-search" class="search-checkbox" />
-                                <span class="checkmark"></span>
-                            </label>
-                            <div class="search-input text-search">
-                                <input type="text" id="message-search-input" name="message-search-input" placeholder="Введите текст сообщения" class="search-input-placeholder"/>
+                            <div>
+                                <label class="search-label">Поиск по тексту сообщения
+                                </label>
+                                <div class="text-input text-search">
+                                    <input type="text" id="message-search-input" name="message-search-input" placeholder="Введите текст сообщения" class="text-input-placeholder"/>
+                                </div>
                             </div>
+                            <button type="submit" class="search-button" onsubmit="controller.showMessages(0, 10, {author: name-search, text: message-search, dateFrom: date-search-start, dateTo: date-search-end})">Начать поиск</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="chat-area">
+                    <div class="message-area">
+                        <button type="button" class="load-more-messages" id="load-more-messages">Загрузить еще</button>
+                        <div class="messages" id="messages">
                         </div>
-                        <button type="submit" class="search-button">Начать поиск</button>
+                    </div>
+                    
+                    <form class="input-message-area" onsubmit="event.preventDefault(); controller.sendMessage(event);">
+                        <div class="target-users-choice">
+                            <input type="text" name="msg-to" id="msg-to" placeholder="Введите имя пользователя" list="target-users-list" class="target-users-choice-placeholder"/>
+                        </div>
+                        <div class="input-message" id="input-message">
+                            <textarea name="write-message" name="msg-text" id="msg-text" disabled></textarea>
+                            <input type="submit" alt="send message" disabled />
+                        </div>
                     </form>
                 </div>
+                <div class="right-border"></div>
             </div>
-
-            <div class="chat-area">
-                <div class="message-area">
-                    <button type="button" class="load-more-messages" id="load-more-messages">Загрузить еще</button>
-                    <div class="messages" id="messages"></div>
-                </div>
+            <div class="registration-module" id="registration-module">
+                <h3 class="registration-label">Зарегистрироваться</h3>
+                <form class="registration-form" onsubmit="event.preventDefault(); controller.register(this.login.value);">
+                    <input type="text" class="login reg-input text-input-placeholder" name="login" id="login" placeholder="Логин" />  
+                    <input type="password" class="password reg-input text-input-placeholder" placeholder="Пароль" />
+                    <input type="password" class="retype-password reg-input text-input-placeholder" placeholder="Повторите пароль" />
+                    <button type="submit" class="registration-button"> Регистрация</button>
+                    <div class="nav-links reg-links">
+                        <button type="button" class="nav-button" id="return-to-chat">Вернуться в чат</button>
+                    </div>
+                </form>
+            </div>
+            <div class="autorization-module" id="autorization-module">
+                <h3 class="autorization-label">Войти</h3> 
+                <form class="autorization-form" action="" onsubmit="event.preventDefault(); controller.login(this.login.value);">
                 
-                <div class="input-message-area">
-                    <div class="target-users-choice">
-                        <input type="text" placeholder="Введите имя пользователя" list="target-users-list" class="target-users-choice-placeholder"/>
+                    <input type="text" class="login auto-input text-input-placeholder" name="login" id="login" placeholder="Логин" />  
+                    <input type="password" class="password auto-input text-input-placeholder" placeholder="Пароль" />
+                    <span class="auto-error-message" id="auto-error-message">Неправильный логин или пароль!</span>
+                    <button type="submit" class="autorization-button" id="autorization-button" >Войти</button>
+                    <div class="nav-links auto-links">
+                        <button type="button" class="nav-button" id="reg-button">Регистрация</button>
+                        <button type="button" class="nav-button" id="return-to-chat-alt">Вернуться в чат</button>
                     </div>
-                    <div class="input-message">
-                        <textarea name="write-message"></textarea>
-                        <input type="submit" alt="send message" />
-                    </div>
-                </div>
+                </form>
             </div>
-            <div class="right-border"></div>
         </main>
 
         <footer class="footer">
