@@ -184,6 +184,11 @@ class UserList {
         this.users = users;
         this.activeUsers = activeUsers;
     }
+
+    addUser(user) {
+        this.users.push(user);
+        this.activeUsers.push(user);
+    }
 }
 
 class HeaderView {
@@ -192,8 +197,17 @@ class HeaderView {
     }
 
     display(user) {
-        if(user !== undefined){
+        if(user !== undefined) {
             document.getElementById(this.elementId).innerHTML = user;
+            document.getElementById('login-button').setAttribute(`src`, `images/logout.png`);
+            document.getElementById("input-message").innerHTML = `<textarea name="write-message" name="msg-text" id="msg-text" ></textarea>
+            <input type="submit" alt="send message"  />`;
+        }
+        else {
+            document.getElementById(this.elementId).innerHTML = '';
+            document.getElementById("input-message").innerHTML = `<textarea name="write-message" name="msg-text" id="msg-text" disabled></textarea>
+            <input type="submit" alt="send message" disabled />`;
+            document.getElementById('login-button').setAttribute(`src`, `images/logout.png`);
         }
     }
 }
@@ -220,31 +234,32 @@ class MessagesView {
     display(msgsArray) {
         const messagesList = document.getElementById(this.elementId);
         messagesList.innerHTML = msgsArray.map(msg => {
-            let d = [
-                '0' + msg.createdAt.getDate(),
-                '0' + (msg.createdAt.getMonth() + 1),
-                '0' + msg.createdAt.getHours(),
-                '0' + msg.createdAt.getMinutes()
-            ].map(item => item.slice(-2));
-            let date = ' ' + d[0] + '.' + d[1] + '.' + msg.createdAt.getFullYear() + ' ' 
-                + d[2] + ':' + d[3];
+            let date = this._formateDate(msg.createdAt);
             let to = '';
             if (msg.to) {
                 to = '  >>  ' + msg.to;
             }
             if (msg.author !== messageList.user) {
-                return `<div class="message them-message">
-                    <div class="message-data">
-                    <span class="author">${msg.author}</span>
-                    <span class="target">${to}</span>
-                    <span class="date">${date}</span>
+                return `<div class="message them-message" id="${msg.id}">
+                    <div>
+                        <div class="message-data">
+                        <span class="author">${msg.author}</span>
+                        <span class="target">${to}</span>
+                        <span class="date">${date}</span>
+                        </div>
+                        <div class="message-text them-message-colour">${msg.text}
+                        </div>
                     </div>
-                    <div class="message-text them-message-colour">${msg.text}
+                    <div class="context-menu" id="context-menu">
+                        <ul class="context-menu-items">
+                            <li class="context-menu-item" id="edit-msg">Edit</li>
+                            <li class="context-menu-item" id="delete-msg">Delete</li>
+                        </ul>
                     </div>
                 </div>`
             }
             else {
-                return `<div class="message us-message">
+                return `<div class="message us-message" id="${msg.id}">
                     <div class="message-data">
                     <span class="author">${msg.author}</span>
                     <span class="target">${to}</span>
@@ -258,44 +273,175 @@ class MessagesView {
         }).join(`\n`);
     }
 
-}
-
-
-function setCurrentUser(user) {
-    messageList.user = user;
-    headerView.display(user);
-}
-
-function showActiveUsers() {
-    activeUsersView.display(userList.activeUsers);
-}
-
-function showMessages(skip, top, filterConfig) {
-    let msgsViewed = messageList.getPage(skip, top, filterConfig);
-    messagesView.display(msgsViewed);
-}
-
-function addMessage(msg) {
-    if(messageList.add(msg)){
-        showMessages(0, 10);
+    _formateDate(date) {
+        let dateOld = [
+            '0' + date.getDate(),
+            '0' + (date.getMonth() + 1),
+            '0' + date.getHours(),
+            '0' + date.getMinutes()
+        ].map(item => item.slice(-2));
+        let dateNew = ' ' + dateOld[0] + '.' + dateOld[1] + '.' + date.getFullYear() + ' ' 
+            + dateOld[2] + ':' + dateOld[3];
+            return dateNew;
     }
 
 }
 
-function editMessage(id, msg) {
-    if(messageList.edit(id, msg)){
-        showMessages(0, 10);
+class Controller {
+    constructor() {
+        this.userList = new UserList(['Дарт Вейдер', 'Dima', 'Zhenya Zh.', 'Zhenya H.', 'Sasha', 'Pasha'], ['Dima', 'Zhenya Zh.', 'Дарт Вейдер']);
+        this.headerView = new HeaderView('user-name');
+        this.messagesView = new MessagesView('messages');
+        this.activeUsersView = new ActiveUsersView('users-online-list');
     }
+
+    _numberOfMessagesShown = 0;
+
+    get numberOfMessagesShown() {
+        return this._numberOfMessagesShown;
+    }
+
+    set numberOfMessagesShown(num) {
+        this._numberOfMessagesShown = num;
+    }
+
+    setCurrentUser(user) {
+        console.log(user);
+        messageList.user = user;
+        this.headerView.display(user);
+    }
+
+    showActiveUsers() {
+        this.activeUsersView.display(this.userList.activeUsers);
+    }
+
+    showMessages(skip = 0, top = 10, filterConfig = {}) {
+        let msgsViewed = messageList.getPage(skip, top, filterConfig);
+        this.messagesView.display(msgsViewed);
+    }
+
+    addMessage(msg) {
+        if(messageList.add(msg)){
+            this.showMessages();
+            this.numberOfMessagesShown = 10;
+            return true;
+        }
+        return false;
+    }
+
+    editMessage(id, msg) {
+        if(messageList.edit(id, msg)){
+            showMessages();
+            this.numberOfMessagesShown = 10;
+        }
+    }
+    
+    removeMessage(id) {
+        if(messageList.remove(id)){
+            showMessages();
+            this.numberOfMessagesShown = 10;
+        }
+    }
+
+    login(user) {
+        let check = false;
+        let i = 0;
+        while (!check && i < this.userList.users.length) {
+            if(this.userList.users[i] !== user) {
+                i++;
+            }
+            else {
+                check = true;
+            }
+        }
+        if(check) {
+            this.setCurrentUser(user);
+            this.showMessages();
+            this.returnToChatPage();
+        }
+        else {
+            document.getElementById("auto-error-message").style.display = "inline";
+        }
+        
+    }
+
+    register(user) {
+        this.setCurrentUser(user);
+        this.showMessages();
+        this.numberOfMessagesShown = 10;
+        this.userList.addUser(user);
+        this.showActiveUsers(this.userList);
+        this.returnToChatPage();
+    }
+
+    sendMessage(event) {
+        let msgTo = event.srcElement[0].value;
+        let msgText = event.srcElement[1].value;
+        let msg={text: msgText, to: msgTo};
+        if(this.addMessage(msg)) {
+            document.getElementById("msg-text").value = "";
+        }
+    }
+
+    loadMoreMessages() {
+        
+    }
+
+    filterMessages(event) {
+        let filter = {};
+        if (event.target[0].value) {
+            filter.author = event.target[0].value;
+        }
+        
+        if (event.target[1].value) {
+            filter.dateFrom = new Date(event.target[1].value);
+        }
+        if (event.target[2].value) {
+           filter.dateTo = new Date(event.target[2].value);
+        }
+        if (event.target[3].value) {
+            filter.text = event.target[3].value;
+         }
+        this.showMessages(0, 10, filter);
+        this.numberOfMessagesShown = 10;
+    }
+
+    moveToLoginPage() {
+        document.getElementById('user-status').style.display = "none";
+        document.getElementById('chat-module').style.display = "none";
+        document.getElementById('registration-module').style.display = "none";
+        document.getElementById('autorization-module').style.display = "flex";
+        
+    }
+    
+    moveToRegisterPage() {
+        document.getElementById('user-status').style.display = "none";
+        document.getElementById('chat-module').style.display = "none";
+        document.getElementById('autorization-module').style.display = "none";
+        document.getElementById('registration-module').style.display = "flex";
+    } 
+
+    returnToChatPage() {
+        document.getElementById('autorization-module').style.display = "none";
+        document.getElementById('registration-module').style.display = "none";
+        document.getElementById('user-status').style.display = "flex";
+        document.getElementById('chat-module').style.display = "flex";
+    }
+
+    showUsersOnlinePanel() {
+        document.getElementById("filters-panel").style.display = 'none';
+        document.getElementById("users-online-panel").style.display = 'block';
+    }
+
+    showFilterPanel() {
+        document.getElementById("users-online-panel").style.display = 'none';
+        document.getElementById("filters-panel").style.display = 'block';
+    }
+
 }
 
-function removeMessage(id) {
-    if(messageList.remove(id)){
-        showMessages(0, 10);
-    }
-}
-
-const userList = new UserList(['Дарт Вейдер', 'Dima', 'Zhenya Zh.', 'Zhenya H.', 'Sasha', 'Pasha'], ['Dima', 'Zhenya Zh.', 'Дарт Вейдер']);
-
+// test data
+//const userList = new UserList(['Дарт Вейдер', 'Dima', 'Zhenya Zh.', 'Zhenya H.', 'Sasha', 'Pasha'], ['Dima', 'Zhenya Zh.', 'Дарт Вейдер']);
 const messageList = new MessageList([
     {
         id: '1',
@@ -444,23 +590,34 @@ const messageList = new MessageList([
     }
     ]); 
 
-
-const headerView = new HeaderView('user-name');
-
-const messagesView = new MessagesView('messages');
-
-const activeUsersView = new ActiveUsersView('users-online-list');
+const controller = new Controller();
+controller.showActiveUsers(this.userList);
+controller.showMessages();
+controller.numberOfMessagesShown = 10;
 
 
-setCurrentUser('Дарт Вейдер');
 
-showActiveUsers();
+const loginButton = document.getElementById("login-button");
+loginButton.addEventListener('click', controller.moveToLoginPage);
 
-showMessages(0, 10);
+const regButton = document.getElementById("reg-button");
+regButton.addEventListener('click', controller.moveToRegisterPage);
 
-addMessage({text: 'Это сообщение было добавлено!!!'});
+const returnToChatButton = document.getElementById("return-to-chat");
+returnToChatButton.addEventListener('click', controller.returnToChatPage);
 
-editMessage('19', {text: 'Это сообщение было изменено!!!'});
+const returnToChatButtonAlt = document.getElementById("return-to-chat-alt");
+returnToChatButtonAlt.addEventListener('click', controller.returnToChat);
 
-removeMessage('17');
+const usersOnlineButton = document.getElementById("users-online-button");
+usersOnlineButton.addEventListener('click', controller.showUsersOnlinePanel);
 
+const filtersButton = document.getElementById("filters-button");
+filtersButton.addEventListener('click', controller.showFilterPanel);
+
+const loadMoreMessagesButton = document.getElementById("load-more-messages");
+loadMoreMessagesButton.addEventListener('click', controller.loadMoreMessages);
+/*
+const rightMouseClick = document.getElementById("messages");
+rightMouseClick.addEventListener('contextmenu', alert("olllaaaa"));
+*/

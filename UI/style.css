@@ -3,8 +3,8 @@
     --secondary-logo-colour: rgba(245, 248, 253, 1);
     --border-colour: rgba(198, 197, 217, 1);
     --main-background-colour: rgba(198, 197, 217, 0.5);
-    --search-input-colour: rgba(198, 197, 217, 0.5); 
-    --search-button-colour: rgba(130, 195, 209, 0.75);
+    --text-input-color: rgba(198, 197, 217, 0.5); 
+    --submit-button-colour: rgba(130, 195, 209, 0.75);
     --checkmark-colour: rgba(198, 197, 217, 1);
     --scrollbar-colour: rgba(198, 197, 217, 0.5);
     --chat-area-background-colour: rgba(245, 248, 253, 1);
@@ -96,6 +96,12 @@ ul {
     flex-direction: row;
 }
 
+.chat-module {
+    width: 100%;
+    height: 100%;
+    display: flex;
+}
+
 .left-border {
     width: var(--left-border-width);
 }
@@ -131,9 +137,12 @@ ul {
     padding-top: 0.5rem;
 }
 
+.filters {
+    display: none;
+}
+
 .filter-search {
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin: 3rem 1rem 1rem 1rem;
 }
 
 .search-label {
@@ -184,10 +193,11 @@ ul {
     transform: rotate(45deg);
 }
 
-.search-input input[type=text] {
+
+.text-input input[type=text] {
     width: 20rem;
     height: 2rem;
-    background-color: var(--search-input-colour);
+    background-color: var(--text-input-color);
     border-radius: 1.5rem;
     border: none;
     color: var(--primary-font-colour);
@@ -209,7 +219,7 @@ ul {
     background-repeat: no-repeat;
 }
 
-.search-input-placeholder::placeholder {
+.text-input-placeholder::placeholder {
     color: var(--primary-font-colour);
     font-size: 0.8rem;
 }
@@ -220,7 +230,7 @@ ul {
     margin-top:1rem;
     border: none;
     border-radius: 1rem;
-    background-color: var(--search-button-colour);
+    background-color: var(--submit-button-colour);
     color: var(--primary-font-colour);
     left: 50%;
     transform: translateX(50%);
@@ -313,6 +323,41 @@ ul {
     padding: 1rem;
 }
 
+.context-menu {
+    display: none;
+    position: absolute;
+    z-index: 10;
+    padding: 0;
+    margin: 0;
+    width: 20rem;
+    background-color: #fff;
+    border: solid 1px #dfdfdf;
+    box-shadow: 1px 1px 2px #cfcfcf;
+}
+  
+.context-menu--active {
+    display: block;
+}
+  
+.context-menu-items {
+    width: 100%;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+  
+.context-menu-item {
+    height: 1.5rem;
+    display: block;
+    padding-inline-start: 1rem;
+    margin: 0.3rem 0;
+    padding-top: 0.1rem;
+}
+
+ .context-menu-item:hover {
+     background-color: var(--main-background-colour);
+ }
+
 .input-message-area {
     width: 90%;
     margin: auto;
@@ -392,6 +437,101 @@ label:focus
 .right-border {
     width: var(--right-border-width);
 }
+
+/* Style for registration, autorization modules */
+.autorization-module,
+.registration-module {
+    display: none;
+}
+
+.registration-form,
+.autorization-form {
+    display: flex;
+}
+.registration-form,
+.autorization-form,
+.autorization-module,
+.registration-module {
+    flex-direction: column;
+    align-items: center;
+}
+
+.autorization-module,
+.registration-module {
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+}
+
+.registration-label,
+.autorization-label {
+    text-align: center;
+    vertical-align: middle;
+    text-transform: uppercase;
+    margin-bottom: 0;
+}
+
+.reg-input,
+.auto-input, 
+.registration-button,
+.autorization-button {
+    height: 3rem;
+    border-radius: 0.5rem;
+    border: none;
+    margin-top: 1rem;
+}
+
+.reg-input,
+.auto-input {
+    width: 20rem;
+    background-color: var(--text-input-color);
+    color: var(--primary-font-colour);
+    padding-left: 1rem;
+}
+
+.auto-error-message {
+    display: none;
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 0.5rem;
+}
+
+.registration-button,
+.autorization-button {
+    width: 21rem;
+    background-color: var(--submit-button-colour);
+    color: var(--secondary-logo-colour);
+    text-transform: uppercase;
+}
+
+.nav-links {
+    width: 100%;
+    display: flex;
+    margin-top: 1rem;
+}
+
+.reg-links {
+    justify-content: center;
+
+}
+
+.auto-links{
+    justify-content: space-between;
+}
+
+.nav-button {
+    padding: 0 1rem;
+    background: none;
+    border: none;
+    font-family: arial, sans-serif;
+    color: var(--primary-font-colour);
+    text-decoration: underline;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+/* Footer style */
 
 .footer {
     width: 100%;
