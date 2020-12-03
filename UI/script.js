@@ -1,7 +1,12 @@
 class Message {
     constructor(user, msg) {
         this._id = msg.id || `${new Date()}`;
-        this._createdAt = msg.createdAt || new Date();
+        if(msg.createdAt) {
+            this._createdAt = new Date(msg.createdAt);
+        }
+        else {
+            this._createdAt = new Date();
+        }
         this._author = msg.author || user;
         this._text = msg.text;
         this._isPersonal = msg.isPersonal;
@@ -48,17 +53,18 @@ class Message {
 }
 
 class MessageList {
-
-    _user = null;
-    constructor(msgs) {
+    
+    constructor() {
+        this._user = localStorage.getItem("user") || undefined;
+        const msgs = this.restore();
         this._messages = [];
         msgs.forEach(item => {
-            this._messages.push(new Message(this._user, item));
+            this._messages.push(new Message(this.user, item));
         });
     }
 
     get user() {
-        return this._user;
+        return localStorage.getItem("user") || undefined;
     }
 
     set user(user) {
@@ -67,6 +73,7 @@ class MessageList {
 
     get messages() {
         return this._messages;
+//        return JSON.parse(localStorage.getItem('messages') ?? '[]');
     }
 
     _filterObj = {
@@ -80,12 +87,19 @@ class MessageList {
     	text: (item) => item.text && item.text.length <= 200
     }
 
+    save() {
+        localStorage.setItem("messages",  JSON.stringify(this.messages));
+    }
+
+    restore() {
+        return JSON.parse(localStorage.getItem('messages') ?? '[]');
+    }
     //messages
     getPage(skip = 0, top = 10, filterConfig) {
-        let result = this._messages.slice();
+        let result = this.messages.slice();
 
         result = result.filter(item => {
-            if(item.author === this._user || item.isPersonal === false || (item.isPersonal === true && item.to === this._user)) {
+            if(item.author === this.user || item.isPersonal === false || (item.isPersonal === true && item.to === this.user)) {
                 return true;
             }
             return false;
@@ -104,8 +118,8 @@ class MessageList {
 
     //getMessage
     get(id) {
-        let message = this._messages.find(item => item.id === id);
-        if (message && message.author === this._user) {
+        let message = this.messages.find(item => item.id === id);
+        if (message && message.author === this.user) {
             return message;
         }
         return null;
@@ -113,9 +127,10 @@ class MessageList {
 
     //addMessage
     add(msg) {
-        let message = new Message(this._user, msg);
+        let message = new Message(this.user, msg);
         if(MessageList.validate(message)){
-            this._messages.push(message);
+            this.messages.push(message);
+            this.save();
             return true;
         }
         return false;
@@ -123,19 +138,20 @@ class MessageList {
 
     //editMessage
     edit(id, msg) {
-        let index = this._messages.findIndex(item => item.id === id);
-        if (index !== -1 && this._messages[index].author === this._user) {
+        let index = this.messages.findIndex(item => item.id === id);
+        if (index !== -1 && this.messages[index].author === this.user) {
             let newMessage = new Message(id, msg);
             if(MessageList.validate(newMessage)) {
                 if (msg.text) {
-                    this._messages[index].text = newMessage.text;
+                    this.messages[index].text = newMessage.text;
                 }
                 if (msg.isPersonal) {
-                    this._messages[index].isPersonal = newMessage.isPersonal;
+                    this.messages[index].isPersonal = newMessage.isPersonal;
                 }
                 if (msg.to && msg.isPersonal) {
-                    this._messages[index].to = newMessage.to;
+                    this.messages[index].to = newMessage.to;
                 }
+                this.save();
                 return true;
             }
         }
@@ -145,9 +161,10 @@ class MessageList {
 
     //removeMessage
     remove(id) {
-        let index = this._messages.findIndex(item => item.id === id);
-        if (index !== -1 && this._messages[index].author === this._user) {
-            let messageDeleted = this._messages.splice(index, 1);
+        let index = this.messages.findIndex(item => item.id === id);
+        if (index !== -1 && this.messages[index].author === this.user) {
+            let messageDeleted = this.messages.splice(index, 1);
+            this.save();
             return true;
         }
         return false;
@@ -163,31 +180,43 @@ class MessageList {
         let notValidMessages = [];
         msgs.forEach(item => {
             if(MessageList.validate(item)) {
-                this._messages.push(item);
+                this.messages.push(item);
             }
             else {
                 notValidMessages.push(item);
             }
         });
+        this.save();
         return notValidMessages;
     }
 
     //delete all messages
     clear() {
-        this._messages = [];
+        this.messages = [];
+        this.save();
     }
 
 }
 
 class UserList {
     constructor(users, activeUsers) {
-        this.users = users;
-        this.activeUsers = activeUsers;
+        this.restore();
     }
 
     addUser(user) {
         this.users.push(user);
         this.activeUsers.push(user);
+        this.save();
+    }
+
+    save() {
+        localStorage.setItem("usersList",  JSON.stringify(this.users));
+        localStorage.setItem("activeUsersList",  JSON.stringify(this.activeUsers));
+    }
+
+    restore() {
+        this.users = JSON.parse(localStorage.getItem('usersList') ?? '[]');
+        this.activeUsers = JSON.parse(localStorage.getItem('activeUsersList') ?? '[]');
     }
 }
 
@@ -207,7 +236,7 @@ class HeaderView {
             document.getElementById(this.elementId).innerHTML = '';
             document.getElementById("input-message").innerHTML = `<textarea name="write-message" name="msg-text" id="msg-text" disabled></textarea>
             <input type="submit" alt="send message" disabled />`;
-            document.getElementById('login-button').setAttribute(`src`, `images/logout.png`);
+            document.getElementById('login-button').setAttribute(`src`, `images/login.png`);
         }
     }
 }
@@ -228,7 +257,16 @@ class ActiveUsersView {
 
 class MessagesView {
     constructor(elementId) {
+        this._user = localStorage.getItem("user") || undefined;
         this.elementId = elementId; 
+    }
+
+    get user() {
+        return localStorage.getItem("user") || undefined;
+    }
+
+    set user(user) {
+        this._user = user;
     }
 
     display(msgsArray) {
@@ -239,9 +277,8 @@ class MessagesView {
             if (msg.to) {
                 to = '  >>  ' + msg.to;
             }
-            if (msg.author !== messageList.user) {
+            if (msg.author !== this.user) {
                 return `<div class="message them-message" id="${msg.id}">
-                    <div>
                         <div class="message-data">
                         <span class="author">${msg.author}</span>
                         <span class="target">${to}</span>
@@ -250,23 +287,17 @@ class MessagesView {
                         <div class="message-text them-message-colour">${msg.text}
                         </div>
                     </div>
-                    <div class="context-menu" id="context-menu">
-                        <ul class="context-menu-items">
-                            <li class="context-menu-item" id="edit-msg">Edit</li>
-                            <li class="context-menu-item" id="delete-msg">Delete</li>
-                        </ul>
-                    </div>
                 </div>`
             }
             else {
                 return `<div class="message us-message" id="${msg.id}">
-                    <div class="message-data">
-                    <span class="author">${msg.author}</span>
-                    <span class="target">${to}</span>
-                    <span class="date">${date}</span>
-                    </div>
-                    <div class="message-text us-message-colour">${msg.text}
-                    </div>
+                        <div class="message-data">
+                        <span class="author">${msg.author}</span>
+                        <span class="target">${to}</span>
+                        <span class="date">${date}</span>
+                        </div>
+                        <div class="message-text us-message-colour">${msg.text}
+                        </div>
                 </div>`
                 
             }
@@ -286,16 +317,53 @@ class MessagesView {
     }
 
 }
+/*
+class UserService {
+    constructor() {
+        this._user = localStorage.getItem("user") || undefined;
+    }
+    
+    get user() {
+        return this._user;
+    }
 
+    set user(user) {
+        this._user = user;
+    }
+}
+*/
 class Controller {
     constructor() {
-        this.userList = new UserList(['Дарт Вейдер', 'Dima', 'Zhenya Zh.', 'Zhenya H.', 'Sasha', 'Pasha'], ['Dima', 'Zhenya Zh.', 'Дарт Вейдер']);
+//        this.user = new UserService();
+        this._user = localStorage.getItem("user") || undefined;
+        this._numberOfMessagesShown = 0;
+        this.userList = new UserList();
         this.headerView = new HeaderView('user-name');
         this.messagesView = new MessagesView('messages');
         this.activeUsersView = new ActiveUsersView('users-online-list');
+        this.messageList = new MessageList();
+     
+        const loginButton = document.getElementById("login-button");
+        loginButton.addEventListener('click', this.moveToLoginPage);
+        const usersOnlineButton = document.getElementById("users-online-button");
+        usersOnlineButton.addEventListener('click', this.showUsersOnlinePanel);
+        const filtersButton = document.getElementById("filters-button");
+        filtersButton.addEventListener('click', this.showFilterPanel);
+        const loadMoreMessagesButton = document.getElementById("load-more-messages");
+        loadMoreMessagesButton.addEventListener('click', () => {this.loadMoreMessages()});
+        document.addEventListener('contextmenu', (event) => {
+            event.preventDefault();
+            this.showContextOptions(event);
+        });
     }
 
-    _numberOfMessagesShown = 0;
+    get user() {
+        return this._user;
+    }
+
+    set user(user) {
+        this._user = user;
+    }
 
     get numberOfMessagesShown() {
         return this._numberOfMessagesShown;
@@ -305,9 +373,15 @@ class Controller {
         this._numberOfMessagesShown = num;
     }
 
+    init() {
+        this.setCurrentUser(this.user);
+        this.showActiveUsers(this.userList);
+        this.showMessages();
+        this.returnToChatPage();
+    }
+
     setCurrentUser(user) {
-        console.log(user);
-        messageList.user = user;
+        this.user = user;
         this.headerView.display(user);
     }
 
@@ -316,45 +390,41 @@ class Controller {
     }
 
     showMessages(skip = 0, top = 10, filterConfig = {}) {
-        let msgsViewed = messageList.getPage(skip, top, filterConfig);
+        const msgsViewed = this.messageList.getPage(skip, top, filterConfig);
         this.messagesView.display(msgsViewed);
+        this.numberOfMessagesShown = top;
     }
 
     addMessage(msg) {
-        if(messageList.add(msg)){
+        if(this.messageList.add(msg)){
             this.showMessages();
-            this.numberOfMessagesShown = 10;
             return true;
         }
         return false;
     }
 
     editMessage(id, msg) {
-        if(messageList.edit(id, msg)){
-            showMessages();
-            this.numberOfMessagesShown = 10;
+        if(this.messageList.edit(id, msg)){
+            this.showMessages();
+            return true;
         }
+        return false;
     }
     
     removeMessage(id) {
-        if(messageList.remove(id)){
-            showMessages();
-            this.numberOfMessagesShown = 10;
+        if(this.messageList.remove(id)){
+            this.showMessages();
         }
     }
 
     login(user) {
-        let check = false;
-        let i = 0;
-        while (!check && i < this.userList.users.length) {
-            if(this.userList.users[i] !== user) {
-                i++;
-            }
-            else {
-                check = true;
-            }
-        }
-        if(check) {
+    const regButton = document.getElementById("reg-button");
+    regButton.addEventListener('click', this.moveToRegisterPage);
+    const returnToChatButton = document.getElementById("return-to-chat");
+    returnToChatButton.addEventListener('click', this.returnToChatPage);
+
+        if(this.userList.users.includes(user)) {
+            localStorage.setItem("user", user);
             this.setCurrentUser(user);
             this.showMessages();
             this.returnToChatPage();
@@ -366,6 +436,10 @@ class Controller {
     }
 
     register(user) {
+        const returnToChatButtonAlt = document.getElementById("return-to-chat-alt");
+        returnToChatButtonAlt.addEventListener('click', this.returnToChatPage);
+
+
         this.setCurrentUser(user);
         this.showMessages();
         this.numberOfMessagesShown = 10;
@@ -375,16 +449,36 @@ class Controller {
     }
 
     sendMessage(event) {
+        let msgId = document.getElementById('msg-id').innerHTML;
         let msgTo = event.srcElement[0].value;
         let msgText = event.srcElement[1].value;
-        let msg={text: msgText, to: msgTo};
-        if(this.addMessage(msg)) {
-            document.getElementById("msg-text").value = "";
+        let msg= {};
+        if(msgTo !== "") {
+            msg = {text: msgText, isPersonal: true, to: msgTo};
         }
+        else {
+            msg = {text: msgText, isPersonal: false};
+        }
+        if(!msgId || msgId === 'undefined') {
+            if(this.addMessage(msg)) {
+                document.getElementById("msg-text").value = "";
+                document.getElementById("msg-to").value = "";
+            }
+        }
+        else {
+            if(this.editMessage(msgId, msg)) {
+                document.getElementById('msg-id').innerHTML = undefined;
+                document.getElementById("msg-text").value = "";
+                document.getElementById("msg-to").value = "";
+            }
+        }
+        
     }
 
     loadMoreMessages() {
-        
+        let number = this.numberOfMessagesShown + 10
+        this.showMessages(0, number);
+        this.numberOfMessagesShown = number;
     }
 
     filterMessages(event) {
@@ -410,8 +504,9 @@ class Controller {
         document.getElementById('user-status').style.display = "none";
         document.getElementById('chat-module').style.display = "none";
         document.getElementById('registration-module').style.display = "none";
+        document.getElementById('auto-error-message').style.display = "none";
         document.getElementById('autorization-module').style.display = "flex";
-        
+        localStorage.removeItem("user");
     }
     
     moveToRegisterPage() {
@@ -438,11 +533,53 @@ class Controller {
         document.getElementById("filters-panel").style.display = 'block';
     }
 
+    showContextOptions(event) {
+        let parentElem = event.target.parentElement;
+        if(parentElem.className !== 'message us-message' && parentElem.className !== 'messages') {
+            console.log(parentElem.className);
+            parentElem = parentElem.parentElement;
+        }
+        if (parentElem.className === 'messages') {
+            return;
+        }
+
+        const id = parentElem.id;
+        let messageElem = document.getElementById(id);
+        messageElem.innerHTML += `<div class="context-menu" id="context-menu">
+                            <ul class="context-menu-items">
+                                <li class="context-menu-item" id="edit-msg">Edit</li>
+                                <li class="context-menu-item" id="delete-msg">Delete</li>
+                            </ul>
+                        </div>`;
+
+        let contextMenu = document.getElementById('context-menu');
+        contextMenu.style.display = 'block';
+        contextMenu.style.transform = 'translate(0%, -100%)';
+        let editButton = document.getElementById('edit-msg');
+        editButton.addEventListener('click', () => {
+            contextMenu.parentNode.removeChild(contextMenu);
+            const msg = this.messageList.get(id);
+            document.getElementById('msg-id').innerHTML = msg.id;
+            document.getElementById('msg-text').value = msg.text;
+            if(msg.to) {
+                document.getElementById('msg-to').value = msg.to;
+            }
+        });
+        let deleteButton = document.getElementById('delete-msg');
+        deleteButton.addEventListener('click', () => {
+            contextMenu.parentNode.removeChild(contextMenu);
+            this.removeMessage(id);
+        });
+        document.addEventListener('click', function() {
+            if(document.getElementById('context-menu')) {
+                let menu = document.getElementById('context-menu');
+                menu.parentNode.removeChild(document.getElementById('context-menu'));
+            }
+        });
+    }
 }
 
-// test data
-//const userList = new UserList(['Дарт Вейдер', 'Dima', 'Zhenya Zh.', 'Zhenya H.', 'Sasha', 'Pasha'], ['Dima', 'Zhenya Zh.', 'Дарт Вейдер']);
-const messageList = new MessageList([
+let messageList = [
     {
         id: '1',
         text: 'Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне.',
@@ -587,37 +724,30 @@ const messageList = new MessageList([
         author: 'Лиза',
         isPersonal: true,
         to: 'Дарт Вейдер'
-    }
-    ]); 
+    }];
+
+function fillLocalCtorage() {
+    localStorage.setItem("messages", JSON.stringify(messageList));
+    localStorage.setItem("usersList", JSON.stringify(['Дарт Вейдер', 'Dima', 'Zhenya Zh.', 'Zhenya H.', 'Sasha', 'Pasha']));
+    localStorage.setItem("activeUsersList", JSON.stringify(['Dima', 'Zhenya Zh.', 'Дарт Вейдер']));
+}
+
+fillLocalCtorage();
 
 const controller = new Controller();
-controller.showActiveUsers(this.userList);
-controller.showMessages();
-controller.numberOfMessagesShown = 10;
+controller.init();
 
 
 
-const loginButton = document.getElementById("login-button");
-loginButton.addEventListener('click', controller.moveToLoginPage);
 
-const regButton = document.getElementById("reg-button");
-regButton.addEventListener('click', controller.moveToRegisterPage);
 
-const returnToChatButton = document.getElementById("return-to-chat");
-returnToChatButton.addEventListener('click', controller.returnToChatPage);
 
-const returnToChatButtonAlt = document.getElementById("return-to-chat-alt");
-returnToChatButtonAlt.addEventListener('click', controller.returnToChat);
 
-const usersOnlineButton = document.getElementById("users-online-button");
-usersOnlineButton.addEventListener('click', controller.showUsersOnlinePanel);
 
-const filtersButton = document.getElementById("filters-button");
-filtersButton.addEventListener('click', controller.showFilterPanel);
 
-const loadMoreMessagesButton = document.getElementById("load-more-messages");
-loadMoreMessagesButton.addEventListener('click', controller.loadMoreMessages);
 /*
-const rightMouseClick = document.getElementById("messages");
-rightMouseClick.addEventListener('contextmenu', alert("olllaaaa"));
+const rightMouseClick = document.querySelector(".us-message");
+rightMouseClick.addEventListener('click', function(event){
+    console.log(event);
+})
 */

@@ -115,7 +115,7 @@ ul {
 }
 
 .function-icon {
-    width: var(--left-border-width);
+    width: calc(var(--left-border-width) * 0.7);
 }
 
 .function-body {
@@ -297,6 +297,7 @@ ul {
 }
 
 .us-message {
+    position: relative;
     align-self: flex-end;
     padding-right: 2rem;
 }
@@ -326,7 +327,7 @@ ul {
 .context-menu {
     display: none;
     position: absolute;
-    z-index: 10;
+    z-index: 100;
     padding: 0;
     margin: 0;
     width: 20rem;
@@ -363,6 +364,15 @@ ul {
     margin: auto;
     margin-top: 2rem;
     margin-bottom: 1rem;
+}
+
+.target-users-choice{
+    display: flex;
+}
+
+.msg-id {
+    display: none;
+
 }
 
 .target-users-choice input[type=text] {
