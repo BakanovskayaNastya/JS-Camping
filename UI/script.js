@@ -52,181 +52,13 @@ class Message {
     }
 }
 
-class MessageList {
-    
-    constructor() {
-        this._user = localStorage.getItem("user") || undefined;
-        const msgs = this.restore();
-        this._messages = [];
-        msgs.forEach(item => {
-            this._messages.push(new Message(this.user, item));
-        });
-    }
-
-    get user() {
-        return localStorage.getItem("user") || undefined;
-    }
-
-    set user(user) {
-        this._user = user;
-    }
-
-    get messages() {
-        return this._messages;
-//        return JSON.parse(localStorage.getItem('messages') ?? '[]');
-    }
-
-    _filterObj = {
-        author: (item, author) => !author || item.author.toLowerCase().includes(author.toLowerCase()),
-        text: (item, text) => !text || item.text.toLowerCase().includes(text.toLowerCase()),
-        dateFrom: (item, dateFrom) => !dateFrom || item.createdAt > dateFrom,
-        dateTo: (item, dateTo) => !dateTo || item.createdAt < dateTo
-    }
-
-    static _validObj = {
-    	text: (item) => item.text && item.text.length <= 200
-    }
-
-    save() {
-        localStorage.setItem("messages",  JSON.stringify(this.messages));
-    }
-
-    restore() {
-        return JSON.parse(localStorage.getItem('messages') ?? '[]');
-    }
-    //messages
-    getPage(skip = 0, top = 10, filterConfig) {
-        let result = this.messages.slice();
-
-        result = result.filter(item => {
-            if(item.author === this.user || item.isPersonal === false || (item.isPersonal === true && item.to === this.user)) {
-                return true;
-            }
-            return false;
-        })
-        
-        if (filterConfig) {
-            Object.keys(filterConfig).forEach((key) => {
-                result = result.filter((item) => this._filterObj[key](item, filterConfig[key]));
-            });
-        } 
-        result.sort( (a, b) => {
-            return b.createdAt - a.createdAt;
-        });
-        return result.splice(skip, skip + top).reverse();
-    }
-
-    //getMessage
-    get(id) {
-        let message = this.messages.find(item => item.id === id);
-        if (message && message.author === this.user) {
-            return message;
-        }
-        return null;
-    }
-
-    //addMessage
-    add(msg) {
-        let message = new Message(this.user, msg);
-        if(MessageList.validate(message)){
-            this.messages.push(message);
-            this.save();
-            return true;
-        }
-        return false;
-    }
-
-    //editMessage
-    edit(id, msg) {
-        let index = this.messages.findIndex(item => item.id === id);
-        if (index !== -1 && this.messages[index].author === this.user) {
-            let newMessage = new Message(id, msg);
-            if(MessageList.validate(newMessage)) {
-                if (msg.text) {
-                    this.messages[index].text = newMessage.text;
-                }
-                if (msg.isPersonal) {
-                    this.messages[index].isPersonal = newMessage.isPersonal;
-                }
-                if (msg.to && msg.isPersonal) {
-                    this.messages[index].to = newMessage.to;
-                }
-                this.save();
-                return true;
-            }
-        }
-        
-        return false;
-    }
-
-    //removeMessage
-    remove(id) {
-        let index = this.messages.findIndex(item => item.id === id);
-        if (index !== -1 && this.messages[index].author === this.user) {
-            let messageDeleted = this.messages.splice(index, 1);
-            this.save();
-            return true;
-        }
-        return false;
-    }
-
-    //validateMessage
-    static validate(msg) {
-        return Object.keys(this._validObj).every((key) => this._validObj[key](msg));
-    }
-
-    //add all messages from the array to collection
-    addAll(msgs) {
-        let notValidMessages = [];
-        msgs.forEach(item => {
-            if(MessageList.validate(item)) {
-                this.messages.push(item);
-            }
-            else {
-                notValidMessages.push(item);
-            }
-        });
-        this.save();
-        return notValidMessages;
-    }
-
-    //delete all messages
-    clear() {
-        this.messages = [];
-        this.save();
-    }
-
-}
-
-class UserList {
-    constructor(users, activeUsers) {
-        this.restore();
-    }
-
-    addUser(user) {
-        this.users.push(user);
-        this.activeUsers.push(user);
-        this.save();
-    }
-
-    save() {
-        localStorage.setItem("usersList",  JSON.stringify(this.users));
-        localStorage.setItem("activeUsersList",  JSON.stringify(this.activeUsers));
-    }
-
-    restore() {
-        this.users = JSON.parse(localStorage.getItem('usersList') ?? '[]');
-        this.activeUsers = JSON.parse(localStorage.getItem('activeUsersList') ?? '[]');
-    }
-}
-
 class HeaderView {
     constructor(elementId) {
         this.elementId = elementId; 
     }
 
     display(user) {
-        if(user !== undefined) {
+        if(user) {
             document.getElementById(this.elementId).innerHTML = user;
             document.getElementById('login-button').setAttribute(`src`, `images/logout.png`);
             document.getElementById("input-message").innerHTML = `<textarea name="write-message" name="msg-text" id="msg-text" ></textarea>
@@ -252,6 +84,7 @@ class ActiveUsersView {
             `<li>${user}</li>`
             ).join(`\n`);
         activeUsersList.innerHTML = innerHTML;
+        return ;
     }
 }
 
@@ -302,6 +135,7 @@ class MessagesView {
                 
             }
         }).join(`\n`);
+        return ;
     }
 
     _formateDate(date) {
@@ -317,52 +151,194 @@ class MessagesView {
     }
 
 }
-/*
-class UserService {
-    constructor() {
-        this._user = localStorage.getItem("user") || undefined;
-    }
-    
-    get user() {
-        return this._user;
+ 
+class ChatApiService {
+    constructor(serverURL) {
+        this._serverURL = serverURL;
     }
 
-    set user(user) {
-        this._user = user;
+    set serverURL(serverURL) {
+        this._serverURL = serverURL;
     }
+
+    get serverURL() {
+        return this._serverURL;
+    }
+
+    requestServerBool(url, obj) {
+        return fetch(url, obj)
+        .then((response) => {
+            if(response.status === 200 || response.status === 201) {
+                return {
+                    status: response.status,
+                    result: true
+                }
+            }
+            else {
+                return {
+                    status: response.status,
+                    result: false
+                }
+            }
+        });
+    }
+
+    getMessages(skip = 0, top = 10, filterConfig) {
+        let url = `${this.serverURL}/messages?skip=${skip}&top=${top}`;
+        if(filterConfig) {
+            const urlParams = Object.entries(filterConfig);
+            urlParams.forEach(item => {
+                url += `&${item[0]}=${item[1]}`;
+            });
+        }
+        let params = {};
+        if(localStorage.getItem("token")) {
+            params = {
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                    "content-type": "application/json"
+                },
+            }
+        }
+        return  fetch(url, params)
+        .then((response) => {
+            return {
+                status: response.status,
+                result: response.json()
+            }
+        });
+    }
+
+    getUsers() {
+        const url = `${this.serverURL}/users`;
+        return fetch(url)
+        .then((response) => {
+            return {
+                status: response.status,
+                result: response.json()
+            }
+        });
+    }
+
+    login(formdata) {
+        const url = `${this.serverURL}/auth/login`;
+        return fetch(url, {
+            method: 'POST',
+            body: formdata
+        })
+        .then((response) => {
+            return {
+                status: response.status,
+                result: response.json()
+            }
+        });
+    }
+
+    logout() {
+        const url = `${this.serverURL}/auth/logout`;
+        const params = {
+            method: 'POST',
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+            }
+        };
+        return this.requestServerBool(url, params);
+    }
+
+    register(formdata) {
+        const url = `${this.serverURL}/auth/register`;
+        return fetch(url, {
+            method: 'POST',
+            body: formdata
+        });
+    }
+
+    addMessage(msg) {
+        const url = `${this.serverURL}/messages`;
+        const params = {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(msg)
+        };
+        return this.requestServerBool(url, params);
+    }
+
+    editMessage(id, msg) {
+        const url = `${this.serverURL}/messages/${id}`;
+        const params = {
+            method: "PUT",
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                "content-type": "application/json"
+            },
+            body: JSON.stringify(msg)
+        };
+        return this.requestServerBool(url, params);
+    }
+
+    deleteMessage(id) {
+        const url = `${this.serverURL}/messages/${id}`;
+        const params = {
+            method: 'DELETE',
+            headers: {
+                "Authorization": `Bearer ${localStorage.getItem("token")}`
+            }
+        };
+        return this.requestServerBool(url, params);
+    }
+    
 }
-*/
+
 class Controller {
     constructor() {
-//        this.user = new UserService();
-        this._user = localStorage.getItem("user") || undefined;
+        this.chatApiService = new ChatApiService('https://jslabdb.datamola.com');
+        this._messages = null;
         this._numberOfMessagesShown = 0;
-        this.userList = new UserList();
+        this._messageTimeout = null;
+        this._usersTimeout = null;
+//        this.userList = new UserList();
         this.headerView = new HeaderView('user-name');
         this.messagesView = new MessagesView('messages');
         this.activeUsersView = new ActiveUsersView('users-online-list');
-        this.messageList = new MessageList();
+//        this.messageList = new MessageList();
      
         const loginButton = document.getElementById("login-button");
-        loginButton.addEventListener('click', this.moveToLoginPage);
+        loginButton.addEventListener('click', () => {
+            
+            if(localStorage.getItem("user")){
+                this.logout();
+            }
+            else {
+                this.goToLoginPage();
+            }
+        });
         const usersOnlineButton = document.getElementById("users-online-button");
-        usersOnlineButton.addEventListener('click', this.showUsersOnlinePanel);
+        usersOnlineButton.addEventListener('click', () => {
+            this.showUsersOnlinePanel;
+        });
         const filtersButton = document.getElementById("filters-button");
-        filtersButton.addEventListener('click', this.showFilterPanel);
+        filtersButton.addEventListener('click', () => {
+            this.showFilterPanel();
+        });
         const loadMoreMessagesButton = document.getElementById("load-more-messages");
-        loadMoreMessagesButton.addEventListener('click', () => {this.loadMoreMessages()});
+        loadMoreMessagesButton.addEventListener('click', () => {
+            this.loadMoreMessages();
+        });
         document.addEventListener('contextmenu', (event) => {
             event.preventDefault();
             this.showContextOptions(event);
         });
     }
 
-    get user() {
-        return this._user;
+    get messages() {
+        return this._messages;
     }
 
-    set user(user) {
-        this._user = user;
+    set messages(msgs) {
+        this._messages = msgs;
     }
 
     get numberOfMessagesShown() {
@@ -373,79 +349,191 @@ class Controller {
         this._numberOfMessagesShown = num;
     }
 
-    init() {
-        this.setCurrentUser(this.user);
-        this.showActiveUsers(this.userList);
-        this.showMessages();
-        this.returnToChatPage();
+    
+    set messageTimeout(messageTimeout){
+        this._messageTimeout = messageTimeout;
     }
 
-    setCurrentUser(user) {
-        this.user = user;
-        this.headerView.display(user);
+    get messageTimeout() {
+        return this._messageTimeout;
+    }
+
+    set usersTimeout(usersTimeout) {
+        this._usersTimeout = usersTimeout;
+    }
+
+    get usersTimeout() {
+        return this._usersTimeout;
+    }
+
+    init() {
+        this.setCurrentUser();
+        this.showActiveUsers();
+        this.showMessages();
+        this.showChatPage();
+    }
+
+    setCurrentUser() {
+        this.headerView.display(localStorage.getItem("user"));
     }
 
     showActiveUsers() {
-        this.activeUsersView.display(this.userList.activeUsers);
+        if(this.usersTimeout) {
+            clearTimeout(this.usersTimeout);
+        }
+        this.chatApiService.getUsers()
+        .then(response => {
+            return this.processResponse(response);
+        })
+        .then((data) => {
+            return data.filter(user => user.isActive).map(user => user.name)
+        })
+        .then((activeUsers) => {
+            this.activeUsersView.display(activeUsers);
+            this.messageTimeout = setTimeout(() => {
+                this.showActiveUsers();
+            }, 5000);
+        });
     }
 
     showMessages(skip = 0, top = 10, filterConfig = {}) {
-        const msgsViewed = this.messageList.getPage(skip, top, filterConfig);
-        this.messagesView.display(msgsViewed);
-        this.numberOfMessagesShown = top;
+        if(this.messageTimeout) {
+            clearTimeout(this.messageTimeout);
+        }
+        this.chatApiService.getMessages(skip, top, filterConfig)
+        .then(response => {
+            return this.processResponse(response);
+        })
+        .then((data) => {
+            return data.map(message => {
+                if(message.isPersonal) {
+                    return new Message(this.user, {
+                        id: message.id,
+                        createdAt: message.createdAt,
+                        author: message.author,
+                        text: message.text,
+                        isPersonal: message.isPersonal,
+                        to: message.to
+                    });
+                }
+                return new Message(this.user, {
+                        id: message.id,
+                        createdAt: message.createdAt,
+                        author: message.author,
+                        text: message.text,
+                        isPersonal: message.isPersonal
+                });
+            });
+        })
+        .then((msgsViewed) => {
+
+            this.messages = msgsViewed;
+            this.messagesView.display(msgsViewed.reverse());
+            this.numberOfMessagesShown = top;
+            this.messageTimeout = setTimeout(() => {
+                this.showMessages(skip, top, filterConfig);
+            }, 60000);
+        });
     }
 
     addMessage(msg) {
-        if(this.messageList.add(msg)){
-            this.showMessages();
-            return true;
-        }
-        return false;
+        this.chatApiService.addMessage(msg)
+        .then(response => {
+            return this.processResponse(response);
+        })
+        .then((result) => {
+            if(result) {
+                this.showMessages();
+                return true;
+            }
+            return false;
+        });
     }
 
     editMessage(id, msg) {
-        if(this.messageList.edit(id, msg)){
-            this.showMessages();
-            return true;
-        }
-        return false;
+        this.chatApiService.editMessage(id, msg)
+        .then(response => {
+            return this.processResponse(response);
+        })
+        .then((result) => {
+            if(result) {
+                this.showMessages();
+                return true;
+            }
+            return false;
+        });
     }
     
     removeMessage(id) {
-        if(this.messageList.remove(id)){
-            this.showMessages();
-        }
+        this.chatApiService.deleteMessage(id)
+        .then(response => {
+            return this.processResponse(response);
+        })
+        .then((result) => {
+            if(result) {
+                this.showMessages();
+                return true;
+            }
+            return false;
+        });
     }
 
-    login(user) {
-    const regButton = document.getElementById("reg-button");
-    regButton.addEventListener('click', this.moveToRegisterPage);
-    const returnToChatButton = document.getElementById("return-to-chat");
-    returnToChatButton.addEventListener('click', this.returnToChatPage);
-
-        if(this.userList.users.includes(user)) {
-            localStorage.setItem("user", user);
-            this.setCurrentUser(user);
-            this.showMessages();
-            this.returnToChatPage();
-        }
-        else {
-            document.getElementById("auto-error-message").style.display = "inline";
-        }
-        
+    logout() {
+        this.chatApiService.logout()
+        .then((response) => {
+            return this.processResponse(response);
+        })
+        .then((result) => {
+            if(result) {
+                localStorage.removeItem("user");
+                localStorage.removeItem("token");
+                this.init();
+            }
+        })
     }
 
-    register(user) {
-        const returnToChatButtonAlt = document.getElementById("return-to-chat-alt");
-        returnToChatButtonAlt.addEventListener('click', this.returnToChatPage);
+    login(login, password) {
+        let formdata = new FormData();
+        formdata.append("name", login);
+        formdata.append("pass", password);
 
+        this.chatApiService.login(formdata)
+        .then((response) => {
+            const token = this.processResponse(response);
+            return token;
+        })
+        .then((response) => {
+            localStorage.setItem("user", login);
+            localStorage.setItem("token", response.token);
+            this.init();
+            
+        });
+    }
 
-        this.setCurrentUser(user);
-        this.showMessages();
-        this.numberOfMessagesShown = 10;
-        this.userList.addUser(user);
-        this.showActiveUsers(this.userList);
-        this.returnToChatPage();
+    register(login, password, passwordRetyped) {
+        if(password !== passwordRetyped){
+            document.getElementById("reg-error-message").innerHTML = "Пароли не совпадают. Повторите попытку.";
+            document.getElementById("reg-error-message").style.display = "inline";
+            return;
+        }
+        let formdata = new FormData();
+        formdata.append("name", login);
+        formdata.append("pass", password);
+
+        this.chatApiService.register(formdata)
+        .then((data) => {
+            if(data.status === 409) {
+                document.getElementById("reg-error-message").innerHTML = "Это имя пользователя уже занято. Попробуйте другое";
+                document.getElementById("reg-error-message").style.display = "inline";
+                return;
+            }
+            if(data.status === 200) {
+                document.getElementById("info-message").style.display = "block";
+            }
+            else {
+                this.goToErrorPage();
+            }
+        })
     }
 
     sendMessage(event) {
@@ -460,17 +548,15 @@ class Controller {
             msg = {text: msgText, isPersonal: false};
         }
         if(!msgId || msgId === 'undefined') {
-            if(this.addMessage(msg)) {
-                document.getElementById("msg-text").value = "";
-                document.getElementById("msg-to").value = "";
-            }
+            document.getElementById("msg-text").value = "";
+            document.getElementById("msg-to").value = "";
+            this.addMessage(msg);
         }
         else {
-            if(this.editMessage(msgId, msg)) {
-                document.getElementById('msg-id').innerHTML = undefined;
-                document.getElementById("msg-text").value = "";
-                document.getElementById("msg-to").value = "";
-            }
+            document.getElementById('msg-id').innerHTML = undefined;
+            document.getElementById("msg-text").value = "";
+            document.getElementById("msg-to").value = "";
+            this.editMessage(msgId, msg);
         }
         
     }
@@ -488,35 +574,80 @@ class Controller {
         }
         
         if (event.target[1].value) {
-            filter.dateFrom = new Date(event.target[1].value);
+            const date = new Date(event.target[1].value);
+            filter.dateFrom = `${date.getFullYear}${date.getMonth+1}${date.getDate}`;
         }
         if (event.target[2].value) {
-           filter.dateTo = new Date(event.target[2].value);
+            const date = new Date(event.target[2].value);
+            filter.dateTo =`${date.getFullYear}${date.getMonth+1}${date.getDate}`;
         }
         if (event.target[3].value) {
             filter.text = event.target[3].value;
          }
         this.showMessages(0, 10, filter);
-        this.numberOfMessagesShown = 10;
     }
 
-    moveToLoginPage() {
+    processResponse(response) {
+        if(response.status === 200 || response.status === 201) {
+            return response.result;
+        }
+        if(response.status === 401) {
+            this.goToLoginPage();
+            document.getElementById("auto-error-message").innerHTML = "Ошибка атворизации. Попробуйте еще раз";
+            document.getElementById("auto-error-message").style.display = "inline";
+        }
+        else {
+            if(response.status === 409) {
+                document.getElementById("reg-error-message").innerHTML = "Это имя пользователя уже занято. Попробуйте другое";
+                document.getElementById("reg-error-message").style.display = "inline";
+            }
+            else {
+                this.goToErrorPage();
+            }
+        }
+    }
+
+    goToLoginPage() {
         document.getElementById('user-status').style.display = "none";
         document.getElementById('chat-module').style.display = "none";
+        document.getElementById('error-module').style.display = "none";
         document.getElementById('registration-module').style.display = "none";
         document.getElementById('auto-error-message').style.display = "none";
         document.getElementById('autorization-module').style.display = "flex";
-        localStorage.removeItem("user");
+
+        const regButton = document.getElementById("reg-button");
+        regButton.addEventListener('click', () => {
+            this.goToRegisterPage();
+        });
+        const returnToChatButton = document.getElementById("return-to-chat");
+        returnToChatButton.addEventListener('click', () => {
+            this.init();
+        });
     }
     
-    moveToRegisterPage() {
+    goToRegisterPage() {
         document.getElementById('user-status').style.display = "none";
         document.getElementById('chat-module').style.display = "none";
+        document.getElementById('error-module').style.display = "none";
         document.getElementById('autorization-module').style.display = "none";
         document.getElementById('registration-module').style.display = "flex";
-    } 
+        const returnToChatButtonAlt = document.getElementById("return-to-chat-alt");
+        returnToChatButtonAlt.addEventListener('click', () => {
+            this.init();
+        });
+    }
+    
+    goToErrorPage() {
+        document.getElementById('user-status').style.display = "none";
+        document.getElementById('chat-module').style.display = "none";
+        document.getElementById('error-module').style.display = "flex";
+        document.getElementById('autorization-module').style.display = "none";
+        document.getElementById('registration-module').style.display = "none";
+    }
+    
 
-    returnToChatPage() {
+    showChatPage() {
+        document.getElementById('error-module').style.display = "none";
         document.getElementById('autorization-module').style.display = "none";
         document.getElementById('registration-module').style.display = "none";
         document.getElementById('user-status').style.display = "flex";
@@ -536,7 +667,6 @@ class Controller {
     showContextOptions(event) {
         let parentElem = event.target.parentElement;
         if(parentElem.className !== 'message us-message' && parentElem.className !== 'messages') {
-            console.log(parentElem.className);
             parentElem = parentElem.parentElement;
         }
         if (parentElem.className === 'messages') {
@@ -558,7 +688,7 @@ class Controller {
         let editButton = document.getElementById('edit-msg');
         editButton.addEventListener('click', () => {
             contextMenu.parentNode.removeChild(contextMenu);
-            const msg = this.messageList.get(id);
+            const msg = this.messages.find((item) => item.id === id);
             document.getElementById('msg-id').innerHTML = msg.id;
             document.getElementById('msg-text').value = msg.text;
             if(msg.to) {
@@ -579,175 +709,7 @@ class Controller {
     }
 }
 
-let messageList = [
-    {
-        id: '1',
-        text: 'Lorem Ipsum - это текст-"рыба", часто используемый в печати и вэб-дизайне.',
-        createdAt: new Date('2020-10-10T15:35:12'),
-        author: 'Чебурашка',
-        isPersonal: false
-    },
-    {
-        id: '2',
-        text: 'Lorem Ipsum является стандартной "рыбой" для текстов на латинице с начала XVI века. В то время некий безымянный печатник создал большую коллекцию размеров и форм шрифтов, используя Lorem Ipsum',
-        createdAt: new Date('2020-10-10T14:36:00'),
-        author: 'Крокодил Гена',
-        isPersonal: false
-    },
-    {
-        id: '3',
-        text: 'Lorem Ipsum не только успешно пережил без заметных изменений пять веков, но и перешагнул в электронный дизайн.',
-        createdAt: new Date('2020-10-10T14:38:12'),
-        author: 'Крокодил Гена',
-        isPersonal: false
-    },
-    {
-        id: '4',
-        text: 'Его популяризации в новое время послужили публикация листов Letraset с образцами Lorem Ipsum в 60-х годах',
-        createdAt: new Date('2020-10-10T14:40:56'),
-        author: 'Лиза',
-        isPersonal: false
-    },
-    {
-        id: '5',
-        text: 'в более недавнее время, программы электронной вёрстки типа Aldus PageMaker, в шаблонах которых используется Lorem Ipsum.',
-        createdAt: new Date('2020-10-10T14:50:01'),
-        author: 'Стас Верхов',
-        isPersonal: false
-    },
-    {
-        id: '6',
-        text: 'Давно выяснено, что при оценке дизайна и композиции читаемый текст мешает сосредоточиться.',
-        createdAt: new Date('2020-10-10T14:55:55'),
-        author: 'Дарт Вейдер',
-        isPersonal: false
-    },
-    {
-        id: '7',
-        text: 'Lorem Ipsum используют потому, что тот обеспечивает более или менее стандартное заполнение шаблона',
-        createdAt: new Date('2020-09-10T14:58:06'),
-        author: 'Дарт Вейдер',
-        isPersonal: false
-    },
-    {
-        id: '8',
-        text: 'Многие программы электронной вёрстки и редакторы HTML используют Lorem Ipsum в качестве текста по умолчанию',
-        createdAt: new Date('2020-10-10T15:03:06'),
-        author: 'Настя Лещинская',
-        isPersonal: false
-    },
-    {
-        id: '9',
-        text: 'За прошедшие годы текст Lorem Ipsum получил много версий.',
-        createdAt: new Date('2020-10-10T15:07:16'),
-        author: 'Вика Смехова',
-        isPersonal: false
-    },
-    {
-        id: '10',
-        text: 'Некоторые версии появились по ошибке, некоторые - намеренно (например, юмористические варианты).',
-        createdAt: new Date('2020-10-10T15:15:15'),
-        author: 'Дарт Вейдер',
-        isPersonal: true,
-        to: 'Стас Верхов'
-    },
-    {
-        id: '11',
-        text: 'Многие думают, что Lorem Ipsum - взятый с потолка псевдо-латинский набор слов, но это не совсем так.',
-        createdAt: new Date('2020-10-12T16:18:23'),
-        author: 'Стас Верхов',
-        isPersonal: true,
-        to: 'Дарт Вейдер',
-    },
-    {
-        id: '12',
-        text: 'Его корни уходят в один фрагмент классической латыни 45 года н.э., то есть более двух тысячелетий назад.',
-        createdAt: new Date('2020-10-11T01:02:02'),
-        author: 'Лиза',
-        isPersonal: false
-    },
-    {
-        id: '13',
-        text: 'Классический текст Lorem Ipsum, используемый с XVI века, приведён ниже. ',
-        createdAt: new Date('2020-10-11T02:01:03'),
-        author: 'Вика Смехова',
-        isPersonal: false
-    },
-    {
-        id: '14',
-        text: 'Давно выяснено, что при оценке дизайна и композиции читаемый текст мешает сосредоточиться.',
-        createdAt: new Date('2020-10-11T05:04:06'),
-        author: 'Крокодил Гена',
-        isPersonal: false
-    },
-    {
-        id: '15',
-        text: 'Многие программы электронной вёрстки и редакторы HTML используют Lorem Ipsum в качестве текста по умолчанию',
-        createdAt: new Date('2020-10-12T16:15:57'),
-        author: 'Чебурашка',
-        isPersonal: true,
-        to: 'Крокодил Гена'
-    },
-    {
-        id: '16',
-        text: 'так что поиск по ключевым словам "lorem ipsum" сразу показывает, как много веб-страниц всё ещё дожидаются своего настоящего рождения.',
-        createdAt: new Date('2020-10-12T16:18:57'),
-        author: 'Крокодил Гена',
-        isPersonal: false
-    },
-    {
-        id: '17',
-        text: 'Есть много вариантов Lorem Ipsum, но большинство из них имеет не всегда приемлемые модификации, например, юмористические вставки или слова, которые даже отдалённо не напоминают латынь.',
-        createdAt: new Date('2020-10-12T16:20:37'),
-        author: 'Дарт Вейдер',
-        isPersonal: false
-    },
-    {
-        id: '18',
-        text: 'Если вам нужен Lorem Ipsum для серьёзного проекта, вы наверняка не хотите какой-нибудь шутки, скрытой в середине абзаца.',
-        createdAt: new Date('2020-10-12T16:26:57'),
-        author: 'Настя Лещинская',
-        isPersonal: false
-    },
-    {
-        id: '19',
-        text: 'Также все другие известные генераторы Lorem Ipsum используют один и тот же текст, который они просто повторяют, пока не достигнут нужный объём.',
-        createdAt: new Date('2020-10-25T17:34:57'),
-        author: 'Дарт Вейдер',
-        isPersonal: true,
-        to: 'Лиза'
-    },
-    {
-        id: '20',
-        text: 'Это делает предлагаемый здесь генератор единственным настоящим Lorem Ipsum генератором. Он использует словарь из более чем 200 латинских слов, а также набор моделей предложений.',
-        createdAt: new Date('2020-10-12T18:15:17'),
-        author: 'Лиза',
-        isPersonal: true,
-        to: 'Дарт Вейдер'
-    }];
-
-function fillLocalCtorage() {
-    localStorage.setItem("messages", JSON.stringify(messageList));
-    localStorage.setItem("usersList", JSON.stringify(['Дарт Вейдер', 'Dima', 'Zhenya Zh.', 'Zhenya H.', 'Sasha', 'Pasha']));
-    localStorage.setItem("activeUsersList", JSON.stringify(['Dima', 'Zhenya Zh.', 'Дарт Вейдер']));
-}
-
-fillLocalCtorage();
-
 const controller = new Controller();
 controller.init();
 
 
-
-
-
-
-
-
-
-/*
-const rightMouseClick = document.querySelector(".us-message");
-rightMouseClick.addEventListener('click', function(event){
-    console.log(event);
-})
-*/
