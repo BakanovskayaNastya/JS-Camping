@@ -449,6 +449,7 @@ label:focus
 }
 
 /* Style for registration, autorization modules */
+
 .autorization-module,
 .registration-module,
 .error-module {
@@ -524,14 +525,6 @@ label:focus
     width: 100%;
     display: flex;
     margin-top: 1rem;
-}
-
-.reg-links {
-    justify-content: center;
-
-}
-
-.auto-links{
     justify-content: space-between;
 }
 
@@ -560,16 +553,6 @@ label:focus
     text-decoration: double;
     padding: 1rem;
     z-index: 100;
-}
-
-.closebtn {
-    margin-left: 1.5rem;
-    color: var(--primary-font-colour);
-    font-weight: bold;
-    float: right;
-    font-size: 2rem;
-    line-height: 1rem;
-    cursor: pointer;
 }
 
 .error-titile {
