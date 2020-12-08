@@ -529,6 +529,12 @@ class Controller {
             }
             if(data.status === 200) {
                 document.getElementById("info-message").style.display = "block";
+                document.getElementById("reglogin").style.display = "none";
+                document.getElementById("password1").style.display = "none";
+                document.getElementById("password2").style.display = "none";
+                document.getElementById("registration-button").style.display = "none";
+                document.getElementById("registration-label").style.display = "none";
+                
             }
             else {
                 this.goToErrorPage();
@@ -634,6 +640,10 @@ class Controller {
         const returnToChatButtonAlt = document.getElementById("return-to-chat-alt");
         returnToChatButtonAlt.addEventListener('click', () => {
             this.init();
+        });
+        const autorizeButton = document.getElementById("go-to-login");
+        autorizeButton.addEventListener('click', () => {
+            this.goToLoginPage();
         });
     }
     
