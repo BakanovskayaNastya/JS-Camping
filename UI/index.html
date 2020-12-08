@@ -77,30 +77,39 @@
                 <div class="right-border"></div>
             </div>
             <div class="registration-module" id="registration-module">
+                <div class="info-message" id="info-message">
+                    <span class="closebtn" id="closebtn" onclick="controller.goToLoginPage();">&times;</span>
+                    Регистрация прошла успешно. Вы будете перенаправлены на страницу авторизации.
+                </div>
                 <h3 class="registration-label">Зарегистрироваться</h3>
-                <form class="registration-form" onsubmit="event.preventDefault(); controller.register(this.login.value);">
-                    <input type="text" class="login reg-input text-input-placeholder" name="login" id="login" placeholder="Логин" />  
-                    <input type="password" class="password reg-input text-input-placeholder" placeholder="Пароль" />
-                    <input type="password" class="retype-password reg-input text-input-placeholder" placeholder="Повторите пароль" />
+                <form class="registration-form" onsubmit="event.preventDefault(); controller.register(this.reglogin.value, this.password1.value, this.password2.value);">
+                    <input type="text" class="login reg-input text-input-placeholder" name="reglogin" id="reglogin" placeholder="Логин" />  
+                    <input type="password" class="password reg-input text-input-placeholder" name="password1" id="password1" placeholder="Пароль" />
+                    <input type="password" class="retype-password reg-input text-input-placeholder" name="password2" id="password2" placeholder="Повторите пароль" />
+                    <span class="reg-error-message" id="reg-error-message">Пароли не совпадают. Повторите попытку.</span>
                     <button type="submit" class="registration-button"> Регистрация</button>
                     <div class="nav-links reg-links">
-                        <button type="button" class="nav-button" id="return-to-chat">Вернуться в чат</button>
+                        <button type="button" class="nav-button" id="return-to-chat-alt">Вернуться в чат</button>
                     </div>
                 </form>
             </div>
             <div class="autorization-module" id="autorization-module">
                 <h3 class="autorization-label">Войти</h3> 
-                <form class="autorization-form" action="" onsubmit="event.preventDefault(); controller.login(this.login.value);">
-                
+                <form class="autorization-form" action="" onsubmit="event.preventDefault(); controller.login(this.login.value, this.password.value);">
                     <input type="text" class="login auto-input text-input-placeholder" name="login" id="login" placeholder="Логин" />  
-                    <input type="password" class="password auto-input text-input-placeholder" placeholder="Пароль" />
+                    <input type="password" class="password auto-input text-input-placeholder" name="password" id="password" placeholder="Пароль" />
                     <span class="auto-error-message" id="auto-error-message">Неправильный логин или пароль!</span>
                     <button type="submit" class="autorization-button" id="autorization-button" >Войти</button>
                     <div class="nav-links auto-links">
                         <button type="button" class="nav-button" id="reg-button">Регистрация</button>
-                        <button type="button" class="nav-button" id="return-to-chat-alt">Вернуться в чат</button>
+                        <button type="button" class="nav-button" id="return-to-chat">Вернуться в чат</button>
                     </div>
                 </form>
+            </div>
+            <div class="error-module" id="error-module">
+                <h1 class="error-titile">Ошибка</h1>
+                <h3 class="error-recommendation">Попробуйте обновить страницу позже</h3>
+                <img src="images/error-img.png" alt="sad-smile" class="error-img" />
             </div>
         </main>
 

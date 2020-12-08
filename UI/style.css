@@ -450,24 +450,28 @@ label:focus
 
 /* Style for registration, autorization modules */
 .autorization-module,
-.registration-module {
+.registration-module,
+.error-module {
     display: none;
 }
 
 .registration-form,
-.autorization-form {
+.autorization-form,
+.error-module {
     display: flex;
 }
 .registration-form,
 .autorization-form,
 .autorization-module,
-.registration-module {
+.registration-module,
+.error-module  {
     flex-direction: column;
     align-items: center;
 }
 
 .autorization-module,
-.registration-module {
+.registration-module,
+.error-module {
     width: 100%;
     height: 100%;
     justify-content: center;
@@ -499,7 +503,8 @@ label:focus
     padding-left: 1rem;
 }
 
-.auto-error-message {
+.auto-error-message,
+.reg-error-message {
     display: none;
     color: red;
     font-weight: bold;
@@ -539,6 +544,50 @@ label:focus
     text-decoration: underline;
     text-transform: uppercase;
     cursor: pointer;
+}
+
+.info-message {
+    display: none;
+    width: 30rem;
+    height: 10rem;
+    background-color: var(--main-background-colour);
+    border-radius: 0.5rem;
+    border-color: var(--main-background-colour);
+    box-shadow: 1px 1px 2px var(--main-background-colour);
+    color: var(--primary-font-colour);
+    text-align: center;
+    font-size: 2rem;
+    text-decoration: double;
+    padding: 1rem;
+    z-index: 100;
+}
+
+.closebtn {
+    margin-left: 1.5rem;
+    color: var(--primary-font-colour);
+    font-weight: bold;
+    float: right;
+    font-size: 2rem;
+    line-height: 1rem;
+    cursor: pointer;
+}
+
+.error-titile {
+    font-size: 6rem;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+}
+
+.error-recommendation {
+    font-size: 3rem;
+    font-weight: normal;
+    margin: 1rem;
+    padding: 0;
+}
+
+.error-img {
+    width: 15%;
 }
 
 /* Footer style */
