@@ -28,7 +28,7 @@
                         <ul id="users-online-list"></ul>
                     </div>
                     <div class="filters" id="filters-panel">
-                        <form class="filter-search" onsubmit="event.preventDefault(); controller.filterMessages(event);">                    
+                        <form class="filter-search" onsubmit="event.preventDefault(); controller.filterMessages(event);">
                             <div>
                                 <label class="search-label">Поиск по имени пользователя
                                 </label>
@@ -51,7 +51,8 @@
                                     <input type="text" id="message-search-input" name="message-search-input" placeholder="Введите текст сообщения" class="text-input-placeholder"/>
                                 </div>
                             </div>
-                            <button type="submit" class="search-button" onsubmit="controller.showMessages(0, 10, {author: name-search, text: message-search, dateFrom: date-search-start, dateTo: date-search-end})">Начать поиск</button>
+                            <button type="button" class="reset-button" id="reset-button">Отмена</button>
+                            <button type="submit" class="search-button">Начать поиск</button>
                         </form>
                     </div>
                 </div>
