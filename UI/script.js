@@ -299,11 +299,11 @@ class Controller {
         this._numberOfMessagesShown = 0;
         this._messageTimeout = null;
         this._usersTimeout = null;
-//        this.userList = new UserList();
+        this._filterConfig = null;
+
         this.headerView = new HeaderView('user-name');
         this.messagesView = new MessagesView('messages');
         this.activeUsersView = new ActiveUsersView('users-online-list');
-//        this.messageList = new MessageList();
      
         const loginButton = document.getElementById("login-button");
         loginButton.addEventListener('click', () => {
@@ -317,7 +317,7 @@ class Controller {
         });
         const usersOnlineButton = document.getElementById("users-online-button");
         usersOnlineButton.addEventListener('click', () => {
-            this.showUsersOnlinePanel;
+            this.showUsersOnlinePanel();
         });
         const filtersButton = document.getElementById("filters-button");
         filtersButton.addEventListener('click', () => {
@@ -327,6 +327,12 @@ class Controller {
         loadMoreMessagesButton.addEventListener('click', () => {
             this.loadMoreMessages();
         });
+
+        const resetFiltersButton = document.getElementById("reset-button");
+        resetFiltersButton.addEventListener('click', () => {
+            this.resetFilters();
+        });
+
         document.addEventListener('contextmenu', (event) => {
             event.preventDefault();
             this.showContextOptions(event);
@@ -348,6 +354,15 @@ class Controller {
     set numberOfMessagesShown(num) {
         this._numberOfMessagesShown = num;
     }
+
+    get filterConfig() {
+        return this._filterConfig;
+    }
+
+    set filterConfig(filterConfig) {
+        this._filterConfig = filterConfig;
+    }
+
 
     
     set messageTimeout(messageTimeout){
@@ -396,7 +411,7 @@ class Controller {
         });
     }
 
-    showMessages(skip = 0, top = 10, filterConfig = {}) {
+    showMessages(skip = 0, top = 10, filterConfig = this.filterConfig) {
         if(this.messageTimeout) {
             clearTimeout(this.messageTimeout);
         }
@@ -431,8 +446,8 @@ class Controller {
             this.messagesView.display(msgsViewed.reverse());
             this.numberOfMessagesShown = top;
             this.messageTimeout = setTimeout(() => {
-                this.showMessages(skip, top, filterConfig);
-            }, 60000);
+                this.showMessages(skip, top);
+            }, 5000);
         });
     }
 
@@ -573,6 +588,15 @@ class Controller {
         this.numberOfMessagesShown = number;
     }
 
+    resetFilters() {
+        this.filterConfig = null;
+        document.getElementById("name-search-input").value = "";
+        document.getElementById("date-search-start").value = "";
+        document.getElementById("date-search-end").value = "";
+        document.getElementById("message-search-input").value = "";
+        this.showMessages();
+    }
+
     filterMessages(event) {
         let filter = {};
         if (event.target[0].value) {
@@ -581,16 +605,17 @@ class Controller {
         
         if (event.target[1].value) {
             const date = new Date(event.target[1].value);
-            filter.dateFrom = `${date.getFullYear}${date.getMonth+1}${date.getDate}`;
+            filter.dateFrom = `${date.getFullYear()}${date.getMonth()+1}${date.getDate()}`;
         }
         if (event.target[2].value) {
             const date = new Date(event.target[2].value);
-            filter.dateTo =`${date.getFullYear}${date.getMonth+1}${date.getDate}`;
+            filter.dateTo =`${date.getFullYear()}${date.getMonth()+1}${date.getDate()}`;
         }
         if (event.target[3].value) {
             filter.text = event.target[3].value;
-         }
-        this.showMessages(0, 10, filter);
+        }
+        this.filterConfig = filter;
+        this.showMessages(0, 10);
     }
 
     processResponse(response) {

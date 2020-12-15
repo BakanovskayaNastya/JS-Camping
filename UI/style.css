@@ -224,7 +224,8 @@ ul {
     font-size: 0.8rem;
 }
 
-.search-button {
+.search-button,
+.reset-button {
     width: 10rem;
     height: 2rem;
     margin-top:1rem;
@@ -232,8 +233,10 @@ ul {
     border-radius: 1rem;
     background-color: var(--submit-button-colour);
     color: var(--primary-font-colour);
-    left: 50%;
-    transform: translateX(50%);
+}
+
+.search-button {
+    margin-left: 2rem;
 }
 
 .chat-area {
